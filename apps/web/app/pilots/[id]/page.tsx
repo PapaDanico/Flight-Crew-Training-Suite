@@ -94,6 +94,15 @@ export default async function PilotDetailPage({ params }: PageProps) {
           </div>
           <div className="flex shrink-0 flex-col gap-2">
             <a
+              href={`/exports/pilot-training-file?pilotId=${pilot.id}`}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-2 rounded border border-amber-500 bg-amber-500 px-3 py-2 text-xs font-medium text-navy-900 hover:bg-amber-400"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Pilot Training File
+            </a>
+            <a
               href={`/exports/crew-currency-snapshot?operatorId=${pilot.operatorId}`}
               target="_blank"
               rel="noopener"
@@ -103,7 +112,7 @@ export default async function PilotDetailPage({ params }: PageProps) {
               Operator snapshot
             </a>
             <span className="text-[10px] text-slate-500">
-              Pilot Training File export coming in Sprint 3.
+              Cmd-P from either view → Save as PDF.
             </span>
           </div>
         </div>
@@ -260,9 +269,6 @@ export default async function PilotDetailPage({ params }: PageProps) {
             Assessment history — Sprint 4 wires{' '}
             <code className="rounded bg-white px-1">AssessmentResult</code> persistence; today's
             assessments are session-only by design (no PII to the model, no untracked records).
-          </li>
-          <li>
-            Pilot Training File PDF — Sprint 3. Per-pilot complete history, KCAA inspector format.
           </li>
           <li>
             Edit / sign-off actions — gated on the API + auth decisions (Fastify/NestJS,
