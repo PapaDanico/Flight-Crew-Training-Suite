@@ -9,3 +9,4 @@ export * from './training.js';
 export * from './document.js';
 export * from './governance.js';
 export * from './ai.js';
+export * from './fixtures.js';

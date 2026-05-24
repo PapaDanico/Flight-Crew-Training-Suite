@@ -128,7 +128,7 @@ export function daysBetween(fromIsoDate: string, toIsoDate: string): number {
 export function statusFor(args: {
   kind: CurrencyKind;
   phase: TrainingPhase;
-  validTo?: IsoDate;
+  validTo?: IsoDate | undefined;
   asOf: IsoDate;
 }): CurrencyStatus {
   if (args.validTo === undefined) {
