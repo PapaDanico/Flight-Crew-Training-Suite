@@ -1,5 +1,11 @@
-import { ANTHROPIC_MODELS, type AnthropicModelId } from '@dnca/domain';
-import { F70_100_CALIBRATION_SYSTEM_BLOCK } from './system-prompt.js';
+import {
+  ANTHROPIC_MODELS,
+  F70_100_PROFILE,
+  isProductionReady,
+  type AircraftTypeProfile,
+  type AnthropicModelId,
+} from '@dnca/domain';
+import { buildCalibrationSystemBlock } from './system-prompt.js';
 import { PROMPT_VERSIONS } from './version.js';
 
 /**
@@ -58,11 +64,17 @@ export interface AssessmentPromptComponents {
   user: string;
   /** Maximum tokens for the response. Tuned to fit a 5-question assessment. */
   maxTokens: 2_000;
+  /** The aircraft type profile the calibration block was built from. */
+  aircraftTypeProfileId: string;
+  /** True when the profile is fully populated; false for preview profiles. */
+  aircraftTypeProductionReady: boolean;
 }
 
 export interface BuildAssessmentPromptInput {
   topic: string;
   target: AssessmentTarget;
+  /** Optional aircraft type profile. Defaults to F70/100. */
+  aircraftType?: AircraftTypeProfile;
 }
 
 export function buildAssessmentPrompt(
@@ -70,9 +82,11 @@ export function buildAssessmentPrompt(
 ): AssessmentPromptComponents {
   const cleanedTopic = sanitiseTopic(input.topic);
   const targetGuidance = TARGET_GUIDANCE[input.target];
+  const profile = input.aircraftType ?? F70_100_PROFILE;
 
   const dynamicSystemBlock =
     `# This generation\n\n` +
+    `Aircraft type: **${profile.shortLabel}** (${profile.longLabel}).\n` +
     `Calibration target: **${input.target}**.\n${targetGuidance}\n\n` +
     `Generate exactly 5 multiple-choice questions on the topic: ` +
     `"${cleanedTopic}".`;
@@ -83,7 +97,7 @@ export function buildAssessmentPrompt(
     system: [
       {
         type: 'text',
-        text: F70_100_CALIBRATION_SYSTEM_BLOCK,
+        text: buildCalibrationSystemBlock(profile),
         cache_control: { type: 'ephemeral' },
       },
       {
@@ -93,6 +107,8 @@ export function buildAssessmentPrompt(
     ],
     user: `Topic: ${cleanedTopic}`,
     maxTokens: 2_000,
+    aircraftTypeProfileId: profile.id,
+    aircraftTypeProductionReady: isProductionReady(profile),
   };
 }
 

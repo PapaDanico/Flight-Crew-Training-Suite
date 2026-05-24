@@ -8,6 +8,7 @@ import {
   type Assessment,
   type AssessmentTarget,
 } from '@dnca/prompts';
+import { AIRCRAFT_TYPE_PROFILES, F70_100_PROFILE, tryGetAircraftTypeProfile } from '@dnca/domain';
 
 /**
  * Server-side AI assessment proxy.
@@ -35,6 +36,7 @@ export const dynamic = 'force-dynamic';
 interface GenerateInput {
   topic: unknown;
   target: unknown;
+  aircraftTypeId?: unknown;
 }
 
 type GenerateResponse =
@@ -44,6 +46,8 @@ type GenerateResponse =
       modelId: string;
       promptVersion: string;
       attempts: number;
+      aircraftTypeProfileId: string;
+      aircraftTypeProductionReady: boolean;
       cacheUsage?: { cacheCreationInputTokens: number; cacheReadInputTokens: number };
     }
   | {
@@ -143,16 +147,38 @@ export async function POST(req: NextRequest): Promise<NextResponse<GenerateRespo
         ok: false,
         error: {
           kind: 'invalid-input',
-          message: `Body must be { topic: string; target: ${ASSESSMENT_TARGET.join(' | ')} }.`,
+          message: `Body must be { topic: string; target: ${ASSESSMENT_TARGET.join(' | ')}; aircraftTypeId?: ${AIRCRAFT_TYPE_PROFILES.map((p) => p.id).join(' | ')} }.`,
         },
       },
       { status: 400 },
     );
   }
 
+  let aircraftType = F70_100_PROFILE;
+  if (typeof body.aircraftTypeId === 'string') {
+    const resolved = tryGetAircraftTypeProfile(body.aircraftTypeId);
+    if (!resolved) {
+      return NextResponse.json<GenerateResponse>(
+        {
+          ok: false,
+          error: {
+            kind: 'invalid-input',
+            message: `Unknown aircraftTypeId. Known: ${AIRCRAFT_TYPE_PROFILES.map((p) => p.id).join(', ')}.`,
+          },
+        },
+        { status: 400 },
+      );
+    }
+    aircraftType = resolved;
+  }
+
   let prompt;
   try {
-    prompt = buildAssessmentPrompt({ topic: body.topic, target: body.target });
+    prompt = buildAssessmentPrompt({
+      topic: body.topic,
+      target: body.target,
+      aircraftType,
+    });
   } catch (err) {
     return NextResponse.json<GenerateResponse>(
       {
@@ -215,6 +241,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<GenerateRespo
           model: prompt.model,
           promptVersion: prompt.promptVersion,
           target: body.target,
+          aircraftTypeProfileId: prompt.aircraftTypeProfileId,
+          aircraftTypeProductionReady: prompt.aircraftTypeProductionReady,
           attempts: attempt,
           cacheUsage,
         }),
@@ -225,6 +253,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<GenerateRespo
         modelId: prompt.model,
         promptVersion: prompt.promptVersion,
         attempts: attempt,
+        aircraftTypeProfileId: prompt.aircraftTypeProfileId,
+        aircraftTypeProductionReady: prompt.aircraftTypeProductionReady,
         ...(cacheUsage ? { cacheUsage } : {}),
       });
     }

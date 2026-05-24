@@ -2,6 +2,11 @@
 
 import { useState } from 'react';
 import { ASSESSMENT_TARGET, type Assessment, type AssessmentTarget } from '@dnca/prompts';
+import {
+  AIRCRAFT_TYPE_PROFILES,
+  F70_100_PROFILE_ID,
+  type AircraftTypeProfileId,
+} from '@dnca/domain';
 import { AlertTriangle, BookOpen, Brain, CheckCircle, Sparkles, XCircle } from 'lucide-react';
 
 const TARGET_LABELS: Record<AssessmentTarget, string> = {
@@ -29,6 +34,8 @@ type GenerateResponse =
       modelId: string;
       promptVersion: string;
       attempts: number;
+      aircraftTypeProfileId: string;
+      aircraftTypeProductionReady: boolean;
       cacheUsage?: { cacheCreationInputTokens: number; cacheReadInputTokens: number };
     }
   | {
@@ -39,6 +46,8 @@ type GenerateResponse =
 export default function AssessmentsPage() {
   const [topic, setTopic] = useState('');
   const [target, setTarget] = useState<AssessmentTarget>('type-recurrent');
+  const [aircraftTypeId, setAircraftTypeId] = useState<AircraftTypeProfileId>(F70_100_PROFILE_ID);
+  const selectedProfile = AIRCRAFT_TYPE_PROFILES.find((p) => p.id === aircraftTypeId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generated, setGenerated] = useState<
@@ -58,7 +67,7 @@ export default function AssessmentsPage() {
       const res = await fetch('/api/assessments/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topic.trim(), target }),
+        body: JSON.stringify({ topic: topic.trim(), target, aircraftTypeId }),
       });
       const body = (await res.json()) as GenerateResponse;
       if (body.ok) {
@@ -137,6 +146,42 @@ export default function AssessmentsPage() {
 
           <div>
             <label className="text-xs font-medium uppercase tracking-wide text-slate-600">
+              Aircraft type
+            </label>
+            <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {AIRCRAFT_TYPE_PROFILES.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setAircraftTypeId(p.id)}
+                  disabled={loading}
+                  className={`rounded border px-3 py-2 text-left text-xs transition ${
+                    aircraftTypeId === p.id
+                      ? 'border-navy-700 bg-navy-900 text-white'
+                      : 'border-slate-300 bg-white text-slate-700 hover:border-navy-300'
+                  }`}
+                >
+                  <div className="font-medium">{p.shortLabel}</div>
+                  <div
+                    className={`text-[10px] ${aircraftTypeId === p.id ? 'text-amber-300' : 'text-slate-500'}`}
+                  >
+                    {p.status === 'production-ready' ? 'Production-ready' : 'Preview'}
+                  </div>
+                </button>
+              ))}
+            </div>
+            {selectedProfile && selectedProfile.status !== 'production-ready' ? (
+              <div className="mt-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+                <strong>Preview profile.</strong> Operational technique and detailed AI calibration
+                for {selectedProfile.longLabel} have not yet been populated by a TRI/TRE qualified
+                on type. The prompt will avoid type-specific technical claims and frame questions
+                generically. Promote to production-ready in Phase 1 of an operator deployment.
+              </div>
+            ) : null}
+          </div>
+
+          <div>
+            <label className="text-xs font-medium uppercase tracking-wide text-slate-600">
               Calibration target
             </label>
             <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -170,6 +215,10 @@ export default function AssessmentsPage() {
             </button>
             {generated ? (
               <span className="text-xs text-slate-500">
+                Type:{' '}
+                <code className="rounded bg-slate-100 px-1">{generated.aircraftTypeProfileId}</code>
+                {!generated.aircraftTypeProductionReady ? ' (preview)' : ''}
+                {' · '}
                 Model: <code className="rounded bg-slate-100 px-1">{generated.modelId}</code>
                 {' · '}
                 Prompt: <code className="rounded bg-slate-100 px-1">{generated.promptVersion}</code>

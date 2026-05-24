@@ -1,18 +1,45 @@
-import { AIRCRAFT_FACTS, exceedsFdapThreshold } from '@dnca/domain';
+import Link from 'next/link';
+import {
+  AIRCRAFT_TYPE_PROFILES,
+  F70_100_PROFILE_ID,
+  FDAP_MTOW_THRESHOLD_KG,
+  profileExceedsFdapThreshold,
+  tryGetAircraftTypeProfile,
+  type AircraftTypeProfile,
+} from '@dnca/domain';
 
-export default function AircraftPage() {
-  const variants = AIRCRAFT_FACTS.variants;
+export const dynamic = 'force-dynamic';
+
+interface PageProps {
+  searchParams: Promise<{ typeId?: string }>;
+}
+
+export default async function AircraftPage({ searchParams }: PageProps) {
+  const { typeId } = await searchParams;
+  const profile =
+    (typeId ? tryGetAircraftTypeProfile(typeId) : tryGetAircraftTypeProfile(F70_100_PROFILE_ID)) ??
+    tryGetAircraftTypeProfile(F70_100_PROFILE_ID)!;
+  const isProduction = profile.status === 'production-ready';
+
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-navy-900">F70/100 Aircraft Facts</h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-700">
-          Authoritative type facts. Sourced from{' '}
-          <code className="rounded bg-slate-100 px-1 py-0.5">@dnca/domain</code> — the single source
-          of truth per ADR 0004. Any drift between this page and the assessment generation prompt is
-          impossible: both compose the same constants at module-load.
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight text-navy-900">
+            {profile.shortLabel} — {profile.longLabel}
+          </h1>
+          <p className="mt-2 max-w-3xl text-sm text-slate-700">
+            Aircraft type profile rendered from{' '}
+            <code className="rounded bg-slate-100 px-1 py-0.5">@dnca/domain</code>'s{' '}
+            <code className="rounded bg-slate-100 px-1 py-0.5">AircraftTypeProfile</code> (ADR
+            0006). Manufacturer facts are public spec data; operational profile and AI calibration
+            are operator OM-B / TRI-TRE territory.
+          </p>
+        </div>
+        <TypeSwitcher selected={profile.id} />
       </header>
+
+      <StatusBanner profile={profile} />
 
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">
@@ -30,20 +57,22 @@ export default function AircraftPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {(Object.keys(variants) as Array<keyof typeof variants>).map((v) => {
-                const m = variants[v];
-                const fdap = exceedsFdapThreshold(m.mtowKg);
+              {profile.manufacturerFacts.variants.map((v) => {
+                const fdap = v.mtowKg > FDAP_MTOW_THRESHOLD_KG;
                 return (
-                  <tr key={v} className="hover:bg-slate-50">
-                    <td className="px-4 py-2 font-medium">{v}</td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      {m.mtowKg.toLocaleString()}
+                  <tr key={v.key} className="hover:bg-slate-50">
+                    <td className="px-4 py-2">
+                      <div className="font-medium">{v.label}</div>
+                      {v.notes ? <div className="text-[10px] text-slate-500">{v.notes}</div> : null}
                     </td>
                     <td className="px-4 py-2 text-right tabular-nums">
-                      {m.mlwKg.toLocaleString()}
+                      {v.mtowKg.toLocaleString()}
                     </td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      {m.mzfwKg.toLocaleString()}
+                    <td className="px-4 py-2 text-right tabular-nums text-slate-500">
+                      {v.mlwKg !== undefined ? v.mlwKg.toLocaleString() : '—'}
+                    </td>
+                    <td className="px-4 py-2 text-right tabular-nums text-slate-500">
+                      {v.mzfwKg !== undefined ? v.mzfwKg.toLocaleString() : '—'}
                     </td>
                     <td className="px-4 py-2 text-right">
                       {fdap ? (
@@ -62,35 +91,50 @@ export default function AircraftPage() {
             </tbody>
           </table>
           <div className="border-t border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
-            FDAP threshold: MTOW &gt; {AIRCRAFT_FACTS.fdapMtowThresholdKg.toLocaleString()} kg per
-            KCARs Reg 56(2).
+            FDAP threshold: MTOW &gt; {FDAP_MTOW_THRESHOLD_KG.toLocaleString()} kg per KCARs Reg
+            56(2).
+            {profileExceedsFdapThreshold(profile)
+              ? ' At least one variant of this type qualifies.'
+              : ' No variant qualifies (FDAP optional).'}
           </div>
         </div>
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Fact
-          label="Engine"
-          value={AIRCRAFT_FACTS.engine}
-          note="Both F70 and F100 — no variants."
-        />
-        <Fact label="APU" value={AIRCRAFT_FACTS.apu} />
+        <Fact label="Engine" value={profile.manufacturerFacts.engineDesignation} />
+        <Fact label="APU" value={profile.manufacturerFacts.apuDesignation ?? '— (not populated)'} />
         <Fact
           label="Hydraulic systems"
-          value={`${AIRCRAFT_FACTS.hydraulicSystemsCount} independent (Systems 1, 2, 3)`}
+          value={
+            profile.manufacturerFacts.hydraulicSystemsCount !== undefined
+              ? `${profile.manufacturerFacts.hydraulicSystemsCount} independent`
+              : '— (pending primary source)'
+          }
         />
         <Fact
           label="Approach speeds"
-          value={AIRCRAFT_FACTS.approachSpeedSource}
-          note="No paper speed cards when VMA is active."
+          value={profile.operationalProfile.approachSpeedSource ?? '— (pending primary source)'}
+          note={
+            isProduction && profile.operationalProfile.approachSpeedSource
+              ? 'No paper speed cards when active.'
+              : undefined
+          }
         />
         <Fact
           label="OEI technique"
-          value={`${AIRCRAFT_FACTS.oei.technique} with ${AIRCRAFT_FACTS.oei.bankIntoLiveEngineDeg}° bank into the live engine`}
+          value={
+            profile.operationalProfile.oei
+              ? `${profile.operationalProfile.oei.technique} with ${profile.operationalProfile.oei.bankIntoLiveEngineDeg}° bank into the live engine`
+              : '— (pending primary source)'
+          }
         />
         <Fact
           label="Max fuel asymmetry"
-          value={`${AIRCRAFT_FACTS.maxFuelAsymmetryKgEnroute.toLocaleString()} kg en-route`}
+          value={
+            profile.operationalProfile.maxFuelAsymmetryKgEnroute !== undefined
+              ? `${profile.operationalProfile.maxFuelAsymmetryKgEnroute.toLocaleString()} kg en-route`
+              : '— (pending primary source)'
+          }
         />
       </section>
 
@@ -99,36 +143,95 @@ export default function AircraftPage() {
           Takeoff flap policy
         </h2>
         <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm text-slate-700">
-          <ul className="space-y-2">
-            <li>
-              Flaps <strong>{AIRCRAFT_FACTS.takeoffFlapPolicy.default}</strong> — default
-            </li>
-            <li>
-              Flaps <strong>{AIRCRAFT_FACTS.takeoffFlapPolicy.performance}</strong> — performance
-            </li>
-            <li>
-              Flaps <strong>{AIRCRAFT_FACTS.takeoffFlapPolicy.reserved}</strong> — reserved
-            </li>
-            <li className="rounded bg-red-50 px-3 py-2 text-red-800">
-              Flaps{' '}
-              <strong>{AIRCRAFT_FACTS.takeoffFlapPolicy.prohibitedOnContaminatedRunway}</strong> is{' '}
-              <strong>PROHIBITED</strong> on contaminated runways
-            </li>
-            <li className="text-xs text-slate-600">
-              TOCWS does not alert for Flaps 0 (a valid configuration). EICAS confirmation
-              discipline is mandatory.
-            </li>
-          </ul>
-          <div className="mt-4 border-t border-slate-200 pt-3 text-xs text-slate-600">
-            Landing flaps: {AIRCRAFT_FACTS.landingFlaps.join(' or ')}
-          </div>
+          {profile.operationalProfile.takeoffFlapPolicy ? (
+            <ul className="space-y-2">
+              <li>
+                Flaps <strong>{profile.operationalProfile.takeoffFlapPolicy.default}</strong> —
+                default
+              </li>
+              <li>
+                Flaps <strong>{profile.operationalProfile.takeoffFlapPolicy.performance}</strong> —
+                performance
+              </li>
+              <li>
+                Flaps <strong>{profile.operationalProfile.takeoffFlapPolicy.reserved}</strong> —
+                reserved
+              </li>
+              <li className="rounded bg-red-50 px-3 py-2 text-red-800">
+                Flaps{' '}
+                <strong>
+                  {profile.operationalProfile.takeoffFlapPolicy.prohibitedOnContaminatedRunway}
+                </strong>{' '}
+                is <strong>PROHIBITED</strong> on contaminated runways
+              </li>
+              {!profile.operationalProfile.takeoffFlapPolicy.tocwsAlertsOnFlapZero ? (
+                <li className="text-xs text-slate-600">
+                  TOCWS does not alert for Flaps 0 (a valid configuration). EICAS confirmation
+                  discipline is mandatory.
+                </li>
+              ) : null}
+            </ul>
+          ) : (
+            <p className="text-slate-500">
+              Takeoff flap policy not yet populated for this profile. Operator OM-B / AFM required.
+            </p>
+          )}
+          {profile.operationalProfile.landingFlaps &&
+          profile.operationalProfile.landingFlaps.length > 0 ? (
+            <div className="mt-4 border-t border-slate-200 pt-3 text-xs text-slate-600">
+              Landing flaps: {profile.operationalProfile.landingFlaps.join(' or ')}
+            </div>
+          ) : null}
         </div>
       </section>
     </div>
   );
 }
 
-function Fact({ label, value, note }: { label: string; value: string; note?: string }) {
+function StatusBanner({ profile }: { profile: AircraftTypeProfile }) {
+  if (profile.status === 'production-ready') {
+    return (
+      <div className="rounded border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
+        <strong>Production-ready.</strong> Used as the primary type calibration for JAK and I-Fly
+        deployments. AI assessment generation produces fully-anchored questions; KCAA-aligned
+        exports cite type-specific operational sources.
+      </div>
+    );
+  }
+  return (
+    <div className="rounded border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+      <strong>Preview profile.</strong> Manufacturer facts are populated from public spec; the
+      operational profile and AI calibration are pending population by a TRI/TRE qualified on type.
+      Promote to production-ready during Phase 1 of an operator deployment.
+    </div>
+  );
+}
+
+function TypeSwitcher({ selected }: { selected: string }) {
+  return (
+    <div className="flex shrink-0 flex-col gap-1">
+      <span className="text-[10px] uppercase tracking-wide text-slate-500">Aircraft type</span>
+      <div className="flex flex-wrap gap-1">
+        {AIRCRAFT_TYPE_PROFILES.map((p) => (
+          <Link
+            key={p.id}
+            href={`/aircraft?typeId=${p.id}`}
+            className={`rounded border px-2 py-1 text-xs ${
+              p.id === selected
+                ? 'border-navy-700 bg-navy-900 text-white'
+                : 'border-slate-300 bg-white text-slate-700 hover:border-navy-300'
+            }`}
+          >
+            {p.shortLabel}
+            {p.status !== 'production-ready' ? ' (preview)' : ''}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Fact({ label, value, note }: { label: string; value: string; note?: string | undefined }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>

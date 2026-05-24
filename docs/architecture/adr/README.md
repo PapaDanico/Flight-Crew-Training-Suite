@@ -26,13 +26,14 @@ Each ADR captures one architectural decision in context: why it was needed, what
 
 ## Index
 
-| #                                                | Status   | Title                                                         |
-| ------------------------------------------------ | -------- | ------------------------------------------------------------- |
-| [0001](./0001-typescript-strict-everywhere.md)   | Accepted | TypeScript strict everywhere                                  |
-| [0002](./0002-multi-tenancy-via-postgres-rls.md) | Accepted | Multi-tenancy via Postgres row-level security                 |
-| [0003](./0003-append-only-audit-log.md)          | Accepted | Append-only audit log enforced by Postgres triggers           |
-| [0004](./0004-domain-package-source-of-truth.md) | Accepted | `@dnca/domain` is the single source of truth for entity types |
-| [0005](./0005-drizzle-orm-for-db-layer.md)       | Accepted | Drizzle ORM + drizzle-kit for the database layer              |
+| #                                                | Status   | Title                                                           |
+| ------------------------------------------------ | -------- | --------------------------------------------------------------- |
+| [0001](./0001-typescript-strict-everywhere.md)   | Accepted | TypeScript strict everywhere                                    |
+| [0002](./0002-multi-tenancy-via-postgres-rls.md) | Accepted | Multi-tenancy via Postgres row-level security                   |
+| [0003](./0003-append-only-audit-log.md)          | Accepted | Append-only audit log enforced by Postgres triggers             |
+| [0004](./0004-domain-package-source-of-truth.md) | Accepted | `@dnca/domain` is the single source of truth for entity types   |
+| [0005](./0005-drizzle-orm-for-db-layer.md)       | Accepted | Drizzle ORM + drizzle-kit for the database layer                |
+| [0006](./0006-aircraft-type-profile-plug-in.md)  | Accepted | `AircraftTypeProfile` as the type-extensibility plug-in pattern |
 
 ## Open architectural decisions
 

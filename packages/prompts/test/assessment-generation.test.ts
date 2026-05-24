@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { E190_PROFILE, F70_100_PROFILE } from '@dnca/domain';
 import {
   ASSESSMENT_TARGET,
   buildAssessmentPrompt,
@@ -57,5 +58,58 @@ describe('sanitiseTopic', () => {
 
   it('rejects topics that look like a pilot licence number', () => {
     assert.throws(() => sanitiseTopic('Review training for KCAA/ATPL/2241'), /licence number/);
+  });
+});
+
+describe('buildAssessmentPrompt — aircraft type profile selection', () => {
+  it('defaults to F70/100 (production-ready) when no aircraftType given', () => {
+    const out = buildAssessmentPrompt({ topic: 'Engine fire', target: 'crm' });
+    assert.equal(out.aircraftTypeProfileId, F70_100_PROFILE.id);
+    assert.equal(out.aircraftTypeProductionReady, true);
+  });
+
+  it('accepts an explicit F70/100 profile and produces the production calibration', () => {
+    const out = buildAssessmentPrompt({
+      topic: 'Engine fire',
+      target: 'crm',
+      aircraftType: F70_100_PROFILE,
+    });
+    assert.equal(out.aircraftTypeProfileId, F70_100_PROFILE.id);
+    assert.equal(out.aircraftTypeProductionReady, true);
+    // The static block includes type-specific technical anchors.
+    assert.match(out.system[0]!.text, /Rolls-Royce Tay/);
+    assert.match(out.system[0]!.text, /5° bank/);
+  });
+
+  it('accepts the E190 preview profile and produces a generic calibration', () => {
+    const out = buildAssessmentPrompt({
+      topic: 'Engine fire',
+      target: 'crm',
+      aircraftType: E190_PROFILE,
+    });
+    assert.equal(out.aircraftTypeProfileId, E190_PROFILE.id);
+    assert.equal(out.aircraftTypeProductionReady, false);
+    // The preview block REFUSES to claim F70-specific facts.
+    assert.doesNotMatch(out.system[0]!.text, /Rolls-Royce Tay/);
+    assert.doesNotMatch(out.system[0]!.text, /5° bank into the live engine/);
+    // It DOES name the public engine designation.
+    assert.match(out.system[0]!.text, /CF34-10E/);
+    // It explicitly signals preview status.
+    assert.match(out.system[0]!.text, /preview/);
+  });
+
+  it('includes the aircraft short-label in the dynamic system block', () => {
+    const f70 = buildAssessmentPrompt({
+      topic: 'Engine fire',
+      target: 'crm',
+      aircraftType: F70_100_PROFILE,
+    });
+    const e190 = buildAssessmentPrompt({
+      topic: 'Engine fire',
+      target: 'crm',
+      aircraftType: E190_PROFILE,
+    });
+    assert.match(f70.system[1]!.text, /F70\/100/);
+    assert.match(e190.system[1]!.text, /E190/);
   });
 });
