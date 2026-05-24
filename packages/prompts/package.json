@@ -1,0 +1,28 @@
+{
+  "name": "@dnca/prompts",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Versioned, citation-anchored Claude API prompt templates for the Fokker Training Suite",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "lint": "echo 'lint TBD'",
+    "test": "node --test --import tsx 'test/**/*.test.ts'"
+  },
+  "dependencies": {
+    "@dnca/domain": "workspace:*",
+    "@dnca/ontology": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
