@@ -9,6 +9,7 @@ import { loadConfig, isProduction } from './config.js';
 import authPlugin from './plugins/auth.js';
 import tenantPlugin from './plugins/tenant.js';
 import auditPlugin from './plugins/audit.js';
+import zodValidatorPlugin from './plugins/zod-validator.js';
 import { healthRoutes } from './routes/health.js';
 import { pilotRoutes } from './routes/pilots.js';
 
@@ -64,6 +65,7 @@ export async function buildApp() {
     void reply.status(500).send({ error: 'internal_error', message: 'Unexpected server error' });
   });
 
+  await app.register(zodValidatorPlugin);
   await app.register(sensible);
   await app.register(helmet);
   await app.register(cors, {

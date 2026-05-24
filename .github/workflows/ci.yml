@@ -123,3 +123,58 @@ jobs:
             END;
           END$$;
           SQL
+
+  api-integration-tests:
+    name: api integration tests (Postgres 15)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: fokker_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply bootstrap migration
+        env:
+          PGPASSWORD: ci
+        run: psql -h localhost -U postgres -d fokker_ci -v ON_ERROR_STOP=1 -f infra/migrations/0001_initial.sql
+
+      - name: Seed demo operators + fleets for integration tests
+        env:
+          PGPASSWORD: ci
+        run: |
+          psql -h localhost -U postgres -d fokker_ci -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO operators (id, legal_name, trading_name, short_code, aoc_number,
+                                  accountable_manager_name, accountable_manager_email, config)
+          VALUES
+            ('11111111-1111-1111-1111-111111111111', 'JAK Demo', 'JAK Demo', 'JAK-DEMO', 'KE-AOC-1', 'AM J', 'j@ex', '{}'::jsonb),
+            ('22222222-2222-2222-2222-222222222222', 'I-Fly Demo', 'I-Fly Demo', 'IFLY-DEMO', 'KE-AOC-2', 'AM I', 'i@ex', '{}'::jsonb);
+          INSERT INTO fleets (id, operator_id, variant, display_name) VALUES
+            ('11111111-aaaa-aaaa-aaaa-000000000001', '11111111-1111-1111-1111-111111111111', 'F70', 'JAK F70'),
+            ('22222222-aaaa-aaaa-aaaa-000000000001', '22222222-2222-2222-2222-222222222222', 'F100', 'I-Fly F100');
+          ALTER USER app_runtime WITH PASSWORD 'ci';
+          SQL
+
+      - name: Run @dnca/api integration tests
+        env:
+          DATABASE_URL: postgres://app_runtime:ci@localhost:5432/fokker_ci
+          NODE_ENV: development
+          PORT: '3001'
+        run: pnpm --filter @dnca/api test
