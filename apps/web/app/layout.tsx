@@ -3,9 +3,8 @@ import { SiteHeader } from '@/components/site-header';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Fokker 70/100 Flight Crew Training Suite — DN Consultancy Aviation',
-  description:
-    'Multi-tenant Fokker 70/100 flight crew training management platform anchored to KCARs 2025.',
+  title: 'Flight Crew Training Suite — DN Consultancy Aviation',
+  description: 'Multi-tenant flight crew training management platform anchored to KCARs 2025.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

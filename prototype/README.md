@@ -1,6 +1,6 @@
 # Prototype — Frozen Reference
 
-This directory contains the original single-file React artifact that captured the working prototype of the Fokker 70/100 Flight Crew Training Suite.
+This directory contains the original single-file React artifact that captured the working prototype of the DNCA Flight Crew Training Suite. The prototype was scoped to Fokker 70/100 — DNCA's primary type-rating expertise — and remains the F70/100 reference; the production rebuild generalises the spine across aircraft types (ADR 0006).
 
 **Source:** https://claude.ai/public/artifacts/fe7eaec3-a6b5-4589-96da-d84f0790b69b
 

@@ -58,7 +58,7 @@ export default async function PilotTrainingFilePage({ searchParams }: PageProps)
             <div>
               <h1 className="text-lg font-bold text-navy-900">DN Consultancy Aviation</h1>
               <div className="text-[10px] text-slate-600">
-                Fokker 70/100 Flight Crew Training Suite · KCARs 2025-aligned
+                Flight Crew Training Suite · KCARs 2025-aligned
               </div>
             </div>
             <div className="text-right">

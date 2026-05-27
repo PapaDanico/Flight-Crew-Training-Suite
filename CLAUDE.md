@@ -8,7 +8,9 @@ This file gives you the context to be genuinely useful on this codebase. Read it
 
 ## What this project is
 
-A production-grade multi-tenant platform for **Fokker 70/100 flight crew training management** operated by **DN Consultancy Aviation** (DNCA) for East African AOC holders. Principal stakeholder is **Capt. Dan Moi Ng'ong'a**, TRI/TRE Fokker 70/100.
+A production-grade multi-tenant **flight crew training management platform** operated by **DN Consultancy Aviation** (DNCA) for East African AOC holders. Principal stakeholder is **Capt. Dan Moi Ng'ong'a**, TRI/TRE Fokker 70/100.
+
+The platform is **aircraft-type-agnostic at the spine, type-specific by deployment** (ADR 0006). Fokker 70/100 is the production-ready primary calibration (DNCA's deepest type-rating expertise); additional types are added per operator deployment as a Phase-1 content task, not an engineering change.
 
 Active operator deployments target: **Jubba Airways Kenya (JAK)** and **I-Fly Air Solutions**.
 

@@ -72,11 +72,11 @@ Wait ~8 seconds.
 
 Show the metadata strip: model id, prompt version, attempt count, cache token-read count if visible.
 
-Now click the **E190** type button.
+Now click the **B737** type button.
 
-> "Same platform. Different type. Click — and you see the preview banner: the operational technique and AI calibration haven't been populated by an E190 TRI/TRE yet, so the platform refuses to invent specifics. The prompt falls back to generic content. Phase 1 of an E190 deployment is the moment that TRI/TRE populates the profile and flips it to production-ready."
+> "Same platform. Different type. Click — and you see the preview banner: the operational technique and AI calibration haven't been populated by a B737-qualified TRI/TRE yet, so the platform refuses to invent specifics. The prompt falls back to generic content. Phase 1 of a B737 deployment is the moment that TRI/TRE populates the profile and flips it to production-ready."
 
-Generate one in E190 mode. Note the questions are noticeably more generic — and that's the point: **the platform never invents safety-relevant aviation facts**.
+Generate one in B737 mode. Note the questions are noticeably more generic — and that's the point: **the platform never invents safety-relevant aviation facts**.
 
 ### 7. Aircraft + Compliance — 60 s
 
@@ -84,7 +84,7 @@ Generate one in E190 mode. Note the questions are noticeably more generic — an
 
 > "F70/100 facts page. Engine, APU, hydraulics, OEI technique, fuel asymmetry. FDAP-mandatory flag computed per variant from KCARs Reg 56(2) — the platform knows which of the operator's fleet must run FDAP."
 
-Click the E190 button.
+Click the B737 button.
 
 > "Same page, different profile. Preview banner. Operational facts say 'pending primary source' until a qualified instructor populates them."
 
@@ -102,7 +102,7 @@ Click the E190 button.
 
 - **"Is our data secure?"** — Multi-tenant from day one. Postgres row-level security at the database boundary; an application bug can't leak across operators. Data stays in AWS af-south-1 (Cape Town) or Azure South Africa North for Kenya DPA 2019 residency.
 - **"What if you're hit by a bus?"** — Every regulatory claim the platform makes is cited to a primary source you can verify. The audit log is append-only and immutable. Your data and your manuals are exportable at any point. The platform doesn't lock you in; the consulting service does the heavy lifting.
-- **"Why F70/100? We fly something else."** — F70/100 is the first production-ready type calibration. The platform itself is type-agnostic — adding your type is a Phase 1 content task, not a code change. Embraer 190 is in preview today; ATR 72 and E170 are the next targets.
+- **"Why F70/100? We fly something else."** — F70/100 is the first production-ready type calibration (the I-Fly demo). The platform itself is type-agnostic — adding your type is a Phase 1 content task, not a code change. Boeing 737NG is in preview today (the JAK demo); ATR 72, E170, and E190 are the next targets.
 - **"What's it cost?"** — Phase 0: $8–12k. Phase 1: $65–110k. Phase 2: $35–60k. Phase 3: $25–40k/yr. Phase 0 credits to Phase 1.
 - **"When can you start?"** — Phase 0 in two weeks. Soft-booked through Q3 2026; first hard slots available immediately for Reg 84 transition urgency.
 

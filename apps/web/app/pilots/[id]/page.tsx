@@ -22,11 +22,15 @@ import {
   lookupCurrency,
   lookupInstructorName,
   statusFor,
+  type CurrencyRecord,
   type CurrencyStatus,
   type Grade,
   type IsoDate,
+  type Pilot,
   type PilotId,
 } from '@dnca/domain';
+import { ApiError, getPilot, listCurrencyRecords } from '@/lib/api-client';
+import { isApiConfigured } from '@/lib/api-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,16 +38,46 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+async function loadPilot(
+  id: string,
+): Promise<{ pilot: Pilot; records: ReadonlyArray<CurrencyRecord>; source: 'api' | 'fixtures' }> {
+  if (isApiConfigured()) {
+    try {
+      const apiPilot = await getPilot(id);
+      const { records } = await listCurrencyRecords(id);
+      // The API returns the same shapes @dnca/domain types describe; cast
+      // through unknown to satisfy branded-type opacity at the boundary.
+      const pilot = {
+        ...apiPilot,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as unknown as Pilot;
+      return {
+        pilot,
+        records: records as unknown as ReadonlyArray<CurrencyRecord>,
+        source: 'api',
+      };
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) notFound();
+      // Other errors fall through to fixtures so the demo stays usable.
+    }
+  }
+  const fixturePilot = DEMO_PILOTS.find((p) => p.id === (id as PilotId));
+  if (!fixturePilot) notFound();
+  const records = buildDemoCurrencyRecords(new Date()).filter((r) => r.pilotId === fixturePilot.id);
+  return { pilot: fixturePilot, records, source: 'fixtures' };
+}
+
 export default async function PilotDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const pilot = DEMO_PILOTS.find((p) => p.id === (id as PilotId));
-  if (!pilot) notFound();
+  const { pilot, records, source } = await loadPilot(id);
 
   const operator = DEMO_OPERATORS.find((o) => o.id === pilot.operatorId);
   const asOf = new Date();
   const asOfIso = asOf.toISOString().slice(0, 10) as IsoDate;
-  const records = buildDemoCurrencyRecords(asOf).filter((r) => r.pilotId === pilot.id);
   const recordIndex = indexCurrencyByPilotAndKind(records);
+  // Sessions remain fixture-only for now — the GET /sessions list endpoint
+  // is the next API task (currently we only have GET /sessions/:id).
   const { sessions } = buildDemoSessions(asOf);
   const pilotSessions = sessions
     .filter((s) => s.pilotId === pilot.id)
@@ -84,6 +118,18 @@ export default async function PilotDetailPage({ params }: PageProps) {
             <h1 className="text-xl font-bold text-navy-900">{pilot.fullName}</h1>
             <p className="mt-1 text-xs text-slate-600">
               {operator?.tradingName} · {pilot.role} · {pilot.licenceNumber}
+            </p>
+            <p className="mt-1 text-[10px] text-slate-500">
+              Source:{' '}
+              <span
+                className={
+                  source === 'api'
+                    ? 'font-semibold text-emerald-700'
+                    : 'font-semibold text-amber-700'
+                }
+              >
+                {source === 'api' ? 'live API' : 'fixtures (API not configured)'}
+              </span>
             </p>
             <div className="mt-3 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
               <Meta label="Operator" value={operator?.tradingName ?? '—'} />
@@ -271,8 +317,9 @@ export default async function PilotDetailPage({ params }: PageProps) {
             assessments are session-only by design (no PII to the model, no untracked records).
           </li>
           <li>
-            Edit / sign-off actions — gated on the API + auth decisions (Fastify/NestJS,
-            WorkOS/Clerk).
+            Edit / sign-off actions — API write paths exist (POST /pilots, PATCH /pilots/:id, POST
+            /sessions/:id/sign-off) with AuditEvent emission and operator-scope RLS; the UI
+            affordances land once WorkOS JWT verification flips on (Sprint 3 follow-on).
           </li>
         </ul>
       </section>

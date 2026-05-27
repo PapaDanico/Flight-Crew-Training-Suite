@@ -125,7 +125,7 @@ export const F70_100_PROFILE: AircraftTypeProfile = {
         mtowKg: AIRCRAFT_FACTS.variants['F70-HGW'].mtowKg,
         mlwKg: AIRCRAFT_FACTS.variants['F70-HGW'].mlwKg,
         mzfwKg: AIRCRAFT_FACTS.variants['F70-HGW'].mzfwKg,
-        notes: 'Operated by JAK as 5Y-MMB',
+        notes: 'High-Gross-Weight variant; 5Y-MMB is the canonical East African example.',
       },
       {
         key: 'F100',
@@ -168,44 +168,48 @@ export const F70_100_PROFILE: AircraftTypeProfile = {
 };
 
 // ----------------------------------------------------------------------------
-// Embraer E190 — preview profile (proof-of-concept for type-extensibility)
+// Boeing 737NG — preview profile (proof-of-concept for type-extensibility)
 // ----------------------------------------------------------------------------
 //
-// Populated from public Embraer manufacturer specifications. Operational
-// technique and AI calibration are intentionally left to a TRI/TRE qualified
-// on type — the platform refuses to fabricate safety-relevant claims.
+// Populated from public Boeing manufacturer specifications for the 737 Next
+// Generation family (737-600/-700/-800/-900ER). Operational technique and AI
+// calibration are intentionally left to a TRI/TRE qualified on type — the
+// platform refuses to fabricate safety-relevant claims. Maximum take-off
+// weight figures vary by Boeing-offered weight option; values below are the
+// commonly-published nominal MTOW and must be verified against the operator's
+// OpSpec / AFM before promotion to production-ready.
 //
-// Common East African operators: Kenya Airways (subsidiary fleet), Jambojet
-// (currently 737s but E190s have appeared on the route map), RwandAir.
+// Common East African operators of the 737NG: Kenya Airways (737-700/-800),
+// Jambojet, Air Tanzania, RwandAir.
 // ----------------------------------------------------------------------------
 
-export const E190_PROFILE_ID = 'E190' as AircraftTypeProfileId;
+export const B737_PROFILE_ID = 'B737' as AircraftTypeProfileId;
 
-export const E190_PROFILE: AircraftTypeProfile = {
-  id: E190_PROFILE_ID,
-  shortLabel: 'E190',
-  longLabel: 'Embraer 190 (E-Jet)',
+export const B737_PROFILE: AircraftTypeProfile = {
+  id: B737_PROFILE_ID,
+  shortLabel: 'B737',
+  longLabel: 'Boeing 737 Next Generation (737NG)',
   status: 'preview',
   manufacturerFacts: {
-    engineDesignation: 'General Electric CF34-10E',
+    engineDesignation: 'CFM International CFM56-7B',
     variants: [
       {
-        key: 'E190-STD',
-        label: 'E190 (standard)',
-        mtowKg: 47_790,
-        notes: 'Public Embraer spec; verify per operator OpSpec before deployment.',
+        key: 'B737-700',
+        label: '737-700',
+        mtowKg: 70_080,
+        notes: 'Public Boeing spec (nominal MTOW); verify per operator OpSpec before deployment.',
       },
       {
-        key: 'E190-LR',
-        label: 'E190 LR (long range)',
-        mtowKg: 50_300,
-        notes: 'Public Embraer spec; verify per operator OpSpec before deployment.',
+        key: 'B737-800',
+        label: '737-800',
+        mtowKg: 79_015,
+        notes: 'Public Boeing spec (nominal MTOW); verify per operator OpSpec before deployment.',
       },
       {
-        key: 'E190-AR',
-        label: 'E190 AR (advanced range)',
-        mtowKg: 51_800,
-        notes: 'Public Embraer spec; verify per operator OpSpec before deployment.',
+        key: 'B737-900ER',
+        label: '737-900ER',
+        mtowKg: 85_139,
+        notes: 'Public Boeing spec (nominal MTOW); verify per operator OpSpec before deployment.',
       },
     ],
   },
@@ -214,12 +218,13 @@ export const E190_PROFILE: AircraftTypeProfile = {
     notes:
       'Operational profile (takeoff flap policy, OEI technique, fuel asymmetry limits, ' +
       'landing flap selection) must be populated from the operator OM-B and AFM by a ' +
-      'TRI/TRE qualified on type before this profile is promoted to production-ready.',
+      'TRI/TRE qualified on type before this profile is promoted to production-ready. ' +
+      'The 737 MAX (CFM LEAP-1B) is a distinct type rating and is not covered by this profile.',
   },
   aiCalibration: {
     examinerRoleDescription:
-      'You are a Type Rating Examiner (TRE) for the Embraer 190, working within the ' +
-      'regulatory framework of KCARs 2025 cross-referenced to ICAO, FAA, and EASA.',
+      'You are a Type Rating Examiner (TRE) for the Boeing 737 Next Generation, working ' +
+      'within the regulatory framework of KCARs 2025 cross-referenced to ICAO, FAA, and EASA.',
     pendingPrimarySource: true,
   },
 };
@@ -230,7 +235,7 @@ export const E190_PROFILE: AircraftTypeProfile = {
 
 export const AIRCRAFT_TYPE_PROFILES: ReadonlyArray<AircraftTypeProfile> = [
   F70_100_PROFILE,
-  E190_PROFILE,
+  B737_PROFILE,
 ];
 
 const _PROFILES_BY_ID = new Map<AircraftTypeProfileId, AircraftTypeProfile>(

@@ -2,7 +2,7 @@
   "name": "@dnca/exports",
   "version": "0.0.1",
   "private": true,
-  "description": "KCAA-aligned export builders (data assemblers) for the Fokker 70/100 Training Suite",
+  "description": "KCAA-aligned export builders (data assemblers) for the DNCA Flight Crew Training Suite",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
