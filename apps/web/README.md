@@ -4,18 +4,28 @@ Next.js 15 (App Router) frontend for the Fokker 70/100 Flight Crew Training Suit
 
 ## Status
 
-Sprint 2. `/pilots` and `/pilots/[id]` now read from `@dnca/api` over HTTP when configured, with a deterministic fixture fallback for unconfigured environments (CI, Vercel preview without API yet). A source badge on each page surfaces whether live data or fixtures are in use.
+Sprint 2. `/pilots` and `/pilots/[id]` read from `@dnca/api` over HTTP when configured, with a deterministic fixture fallback for unconfigured environments. WorkOS AuthKit is wired for sign-in/out (ADR 0008); when the WorkOS env vars are unset the app runs in demo mode. A source badge on each page and an auth widget in the header surface which mode is active — no silent degradation.
 
-## API wiring (Sprint 2 final piece)
+## Three running modes
 
-Two server-only env vars control wiring:
+| Mode         | Trigger                                            | Auth UI            | API auth header                  | Data           |
+| ------------ | -------------------------------------------------- | ------------------ | -------------------------------- | -------------- |
+| **WorkOS**   | All four `WORKOS_*` + `API_BASE_URL` set           | Sign in / Sign out | `Authorization: Bearer <access>` | Live           |
+| **Demo**     | `API_BASE_URL` + `DEMO_OPERATOR_ID` set, no WorkOS | "Demo mode" pill   | `x-demo-operator-id: <uuid>`     | Live           |
+| **Fixtures** | Neither configured                                 | "Demo mode" pill   | n/a                              | `@dnca/domain` |
 
-| Var                | Required?                           | Purpose                                                                                                 |
-| ------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `API_BASE_URL`     | Optional                            | Base URL of `@dnca/api`, e.g. `http://localhost:3001`. Falls back to fixtures when unset.               |
-| `DEMO_OPERATOR_ID` | Required when `API_BASE_URL` is set | Operator UUID sent as `x-demo-operator-id` until WorkOS JWT verification flips on (Sprint 3 follow-on). |
+Required env vars (server-only unless prefixed `NEXT_PUBLIC_`):
 
-Local dev with the live API:
+| Var                               | Mode          | Purpose                                                                                       |
+| --------------------------------- | ------------- | --------------------------------------------------------------------------------------------- |
+| `API_BASE_URL`                    | Demo + WorkOS | Base URL of `@dnca/api`. Falls back to fixtures when unset.                                   |
+| `DEMO_OPERATOR_ID`                | Demo only     | Operator UUID sent as `x-demo-operator-id`. Mutually exclusive with WorkOS (WorkOS wins).     |
+| `WORKOS_API_KEY`                  | WorkOS        | WorkOS Management API secret (`sk_...`).                                                      |
+| `WORKOS_CLIENT_ID`                | WorkOS        | WorkOS project public id (`client_...`).                                                      |
+| `WORKOS_COOKIE_PASSWORD`          | WorkOS        | >= 32 char secret for encrypting the session cookie. Generate with `openssl rand -base64 32`. |
+| `NEXT_PUBLIC_WORKOS_REDIRECT_URI` | WorkOS        | OAuth callback. Must exactly match the redirect URI configured in the WorkOS dashboard.       |
+
+Local dev with live API + WorkOS:
 
 ```bash
 # terminal 1 — Postgres
@@ -23,15 +33,27 @@ docker compose -f infra/docker-compose.yml up -d
 
 # terminal 2 — API
 DATABASE_URL='postgres://app_runtime:dev@localhost:5432/fokker_dev' \
+  WORKOS_CLIENT_ID='client_01...' \
   pnpm --filter @dnca/api dev
 
 # terminal 3 — web
+API_BASE_URL=http://localhost:3001 \
+  WORKOS_API_KEY='sk_test_...' \
+  WORKOS_CLIENT_ID='client_01...' \
+  WORKOS_COOKIE_PASSWORD='...32+ char secret...' \
+  NEXT_PUBLIC_WORKOS_REDIRECT_URI='http://localhost:3000/callback' \
+  pnpm --filter @dnca/web dev
+```
+
+Local dev without WorkOS (demo mode):
+
+```bash
 API_BASE_URL=http://localhost:3001 \
   DEMO_OPERATOR_ID=22222222-2222-2222-2222-222222222222 \
   pnpm --filter @dnca/web dev
 ```
 
-Without `API_BASE_URL`, the web app still renders fully via `@dnca/domain` fixtures — useful for design work and Vercel preview builds.
+To provision a new operator deployment for WorkOS: store the WorkOS organization id in the `operators.config->>'workosOrganizationId'` jsonb field — the API resolves the operator scope from the JWT's `org_id` claim against this column.
 
 ## Local development
 

@@ -1,22 +1,32 @@
 /**
  * Web → API wiring configuration.
  *
- * When `API_BASE_URL` is set, server-component fetches go to the real
- * @dnca/api Fastify backend with operator scope set via `x-demo-operator-id`
- * (dev path) until WorkOS JWT verification flips on in Sprint 3.
+ * Three running modes, decided per-request:
  *
- * When `API_BASE_URL` is unset (CI build, local web-only dev, Vercel preview
- * with no API yet), pages fall back to deterministic @dnca/domain fixtures so
- * the UI remains demoable end-to-end — the type-extensibility and CBTA stories
- * don't need a live DB to be credible.
+ *   1. workos     — WORKOS_* env set AND the user has a valid session.
+ *                   The web forwards the user's access token to the API
+ *                   as Bearer; the API verifies it and resolves the
+ *                   operator scope from the JWT's org_id claim.
+ *
+ *   2. demo       — API_BASE_URL + DEMO_OPERATOR_ID set, no WorkOS.
+ *                   Web sends the legacy x-demo-operator-id header.
+ *                   Useful for local dev, integration tests, and
+ *                   environments without a WorkOS project yet.
+ *
+ *   3. fixtures   — neither configured. Pages render from @dnca/domain
+ *                   fixtures so design work, CI, and Vercel preview
+ *                   builds without a backend still produce a usable UI.
+ *
+ * The page surfaces a source badge so a viewer always knows which mode
+ * is active — no silent degradation.
  */
 
-export interface ApiConfig {
+export interface DemoApiConfig {
   readonly baseUrl: string;
   readonly demoOperatorId: string;
 }
 
-export function getApiConfig(): ApiConfig | null {
+export function getDemoApiConfig(): DemoApiConfig | null {
   const baseUrl = process.env['API_BASE_URL']?.replace(/\/+$/, '');
   const demoOperatorId = process.env['DEMO_OPERATOR_ID'];
   if (!baseUrl) return null;
@@ -24,6 +34,24 @@ export function getApiConfig(): ApiConfig | null {
   return { baseUrl, demoOperatorId };
 }
 
+export function getApiBaseUrl(): string | null {
+  return process.env['API_BASE_URL']?.replace(/\/+$/, '') ?? null;
+}
+
 export function isApiConfigured(): boolean {
-  return getApiConfig() !== null;
+  return getApiBaseUrl() !== null;
+}
+
+/**
+ * Heuristic: WorkOS-mode is available when the four required vars are set.
+ * The actual session check (whether THIS request has a signed-in user) is
+ * a runtime concern handled by withAuth() in api-client.ts.
+ */
+export function isWorkOSConfigured(): boolean {
+  return Boolean(
+    process.env['WORKOS_CLIENT_ID'] &&
+    process.env['WORKOS_API_KEY'] &&
+    process.env['WORKOS_COOKIE_PASSWORD'] &&
+    process.env['NEXT_PUBLIC_WORKOS_REDIRECT_URI'],
+  );
 }
