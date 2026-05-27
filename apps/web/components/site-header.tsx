@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Plane } from 'lucide-react';
+import { AuthStatus } from './auth-status';
 
 const NAV_LINKS = [
   { href: '/', label: 'Dashboard' },
@@ -28,7 +29,7 @@ export function SiteHeader() {
             </div>
           </div>
         </Link>
-        <nav className="flex gap-1">
+        <nav className="flex flex-1 justify-end gap-1">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -39,6 +40,7 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
+        <AuthStatus />
       </div>
     </header>
   );

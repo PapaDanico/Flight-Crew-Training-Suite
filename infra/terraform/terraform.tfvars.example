@@ -1,0 +1,33 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is in .gitignore.
+
+# Lower-case kebab-case; appears in every resource name + tag.
+operator_short_code = "ifly-demo"
+
+# dev | staging | prod
+environment = "prod"
+
+# Region; ADR 0009 fixes production to af-south-1.
+region = "af-south-1"
+
+# Sized for MVP. Raise db_instance_class to db.t4g.small (or larger)
+# before going live with real pilot data.
+db_instance_class = "db.t4g.micro"
+
+# Hostnames once DNS is configured. Leave both empty during initial
+# bring-up; the ALB DNS name works for both as a catch-all.
+api_host_name = "api.ifly-demo.dnca.aero"
+web_host_name = "app.ifly-demo.dnca.aero"
+
+# ACM cert ARN covering api_host_name + web_host_name. Issue cert after
+# DNS is configured, then re-apply with this set to enable HTTPS.
+# acm_certificate_arn = "arn:aws:acm:af-south-1:123456789012:certificate/..."
+
+# WorkOS — from the WorkOS dashboard. workos_redirect_uri must exactly
+# match the redirect URI configured there.
+workos_api_key         = "sk_live_xxx"
+workos_client_id       = "client_01YYY"
+workos_cookie_password = "GENERATE_32_PLUS_CHAR_SECRET_HERE"
+workos_redirect_uri    = "https://app.ifly-demo.dnca.aero/callback"
+
+# Anthropic API key.
+anthropic_api_key = "sk-ant-..."

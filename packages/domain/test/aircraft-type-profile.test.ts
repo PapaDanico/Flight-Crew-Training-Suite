@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   AIRCRAFT_TYPE_PROFILES,
-  E190_PROFILE,
+  B737_PROFILE,
   F70_100_PROFILE,
   FDAP_MTOW_THRESHOLD_KG,
   getAircraftTypeProfile,
@@ -12,10 +12,10 @@ import {
 } from '../src/index.js';
 
 describe('AircraftTypeProfile registry', () => {
-  it('contains F70/100 and E190', () => {
+  it('contains F70/100 and B737', () => {
     assert.equal(AIRCRAFT_TYPE_PROFILES.length >= 2, true);
     assert.ok(AIRCRAFT_TYPE_PROFILES.includes(F70_100_PROFILE));
-    assert.ok(AIRCRAFT_TYPE_PROFILES.includes(E190_PROFILE));
+    assert.ok(AIRCRAFT_TYPE_PROFILES.includes(B737_PROFILE));
   });
 
   it('all profile ids are unique', () => {
@@ -26,7 +26,7 @@ describe('AircraftTypeProfile registry', () => {
 
   it('getAircraftTypeProfile resolves known ids', () => {
     assert.equal(getAircraftTypeProfile(F70_100_PROFILE.id), F70_100_PROFILE);
-    assert.equal(getAircraftTypeProfile(E190_PROFILE.id), E190_PROFILE);
+    assert.equal(getAircraftTypeProfile(B737_PROFILE.id), B737_PROFILE);
   });
 
   it('tryGetAircraftTypeProfile returns undefined for unknown ids', () => {
@@ -63,26 +63,26 @@ describe('F70/100 profile (production-ready)', () => {
   });
 });
 
-describe('E190 profile (preview)', () => {
+describe('B737 profile (preview)', () => {
   it('is marked preview with pending-source flags set', () => {
-    assert.equal(E190_PROFILE.status, 'preview');
-    assert.equal(isProductionReady(E190_PROFILE), false);
-    assert.equal(E190_PROFILE.operationalProfile.pendingPrimarySource, true);
-    assert.equal(E190_PROFILE.aiCalibration.pendingPrimarySource, true);
+    assert.equal(B737_PROFILE.status, 'preview');
+    assert.equal(isProductionReady(B737_PROFILE), false);
+    assert.equal(B737_PROFILE.operationalProfile.pendingPrimarySource, true);
+    assert.equal(B737_PROFILE.aiCalibration.pendingPrimarySource, true);
   });
 
   it('has public manufacturer facts populated', () => {
-    assert.match(E190_PROFILE.manufacturerFacts.engineDesignation, /CF34-10E/);
-    assert.ok(E190_PROFILE.manufacturerFacts.variants.length >= 1);
+    assert.match(B737_PROFILE.manufacturerFacts.engineDesignation, /CFM56-7B/);
+    assert.ok(B737_PROFILE.manufacturerFacts.variants.length >= 1);
   });
 
   it('omits operational technique (refuses to fabricate)', () => {
-    assert.equal(E190_PROFILE.operationalProfile.oei, undefined);
-    assert.equal(E190_PROFILE.operationalProfile.maxFuelAsymmetryKgEnroute, undefined);
-    assert.equal(E190_PROFILE.operationalProfile.takeoffFlapPolicy, undefined);
+    assert.equal(B737_PROFILE.operationalProfile.oei, undefined);
+    assert.equal(B737_PROFILE.operationalProfile.maxFuelAsymmetryKgEnroute, undefined);
+    assert.equal(B737_PROFILE.operationalProfile.takeoffFlapPolicy, undefined);
   });
 
   it('omits AI technicalFactsBlock (refuses to invent)', () => {
-    assert.equal(E190_PROFILE.aiCalibration.technicalFactsBlock, undefined);
+    assert.equal(B737_PROFILE.aiCalibration.technicalFactsBlock, undefined);
   });
 });

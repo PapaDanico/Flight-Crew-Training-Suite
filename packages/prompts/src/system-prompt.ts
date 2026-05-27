@@ -17,7 +17,7 @@ import {
  *
  * The block is now built per-AircraftTypeProfile. The F70/100 profile
  * produces the same block the platform shipped with originally (ADR 0006
- * preserves this invariant). Preview profiles (E190 et al.) that have
+ * preserves this invariant). Preview profiles (B737 et al.) that have
  * not yet been populated by a TRI/TRE produce a generic examiner role
  * without inventing type-specific technical claims.
  *

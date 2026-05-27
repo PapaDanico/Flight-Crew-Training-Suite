@@ -4,7 +4,7 @@
 
 A multi-tenant platform combining crew currency tracking, training programme management, instructor session logging, CBTA analytics, regulatory document control, and AI-assisted knowledge assessment — anchored to KCARs 2025 with ICAO / FAA / EASA cross-reference.
 
-The platform is **aircraft-type-agnostic at the spine, type-specific by deployment** (ADR 0006). Fokker 70/100 is the production-ready primary calibration; Embraer 190 is a preview profile; extending to ATR 72, B737-NG, E170 et al. is a content task during Phase-1 of each operator deployment, not an engineering change.
+The platform is **aircraft-type-agnostic at the spine, type-specific by deployment** (ADR 0006). Fokker 70/100 is the production-ready primary calibration (demoed against I-Fly Air Solutions); Boeing 737NG is the preview profile (demoed against Jubba Airways Kenya); extending to ATR 72, E170, E190 et al. is a content task during Phase-1 of each operator deployment, not an engineering change.
 
 Built and operated by **DN Consultancy Aviation** under the principal direction of **Capt. Dan Moi Ng'ong'a**, TRI/TRE Fokker 70/100.
 

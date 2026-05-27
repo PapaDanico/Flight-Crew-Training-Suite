@@ -9,18 +9,82 @@ import {
   indexCurrencyByPilotAndKind,
   statusFor,
   type CurrencyCategory,
+  type CurrencyRecord,
   type CurrencyStatus,
   type IsoDate,
   type Pilot,
 } from '@dnca/domain';
+import { listCurrencyRecords, listPilots } from '@/lib/api-client';
+import { isApiConfigured } from '@/lib/api-config';
 
 export const dynamic = 'force-dynamic';
 
-export default function PilotsPage() {
+type PilotRow = Pick<
+  Pilot,
+  | 'id'
+  | 'operatorId'
+  | 'fleetId'
+  | 'fullName'
+  | 'licenceNumber'
+  | 'role'
+  | 'baseIcao'
+  | 'phase'
+  | 'active'
+>;
+
+type RecordRow = Pick<CurrencyRecord, 'pilotId' | 'kind' | 'validFrom' | 'validTo'>;
+
+interface PageData {
+  pilots: ReadonlyArray<PilotRow>;
+  records: ReadonlyArray<RecordRow>;
+  source: 'api' | 'fixtures';
+  apiError: string | null;
+}
+
+async function loadPageData(asOf: Date): Promise<PageData> {
+  if (!isApiConfigured()) {
+    return {
+      pilots: DEMO_PILOTS,
+      records: buildDemoCurrencyRecords(asOf),
+      source: 'fixtures',
+      apiError: null,
+    };
+  }
+  try {
+    const { pilots } = await listPilots();
+    const records: RecordRow[] = [];
+    for (const p of pilots) {
+      const { records: r } = await listCurrencyRecords(p.id);
+      for (const rec of r) {
+        records.push({
+          pilotId: rec.pilotId as RecordRow['pilotId'],
+          kind: rec.kind,
+          validFrom: rec.validFrom,
+          validTo: rec.validTo,
+        });
+      }
+    }
+    return {
+      pilots: pilots as ReadonlyArray<PilotRow>,
+      records,
+      source: 'api',
+      apiError: null,
+    };
+  } catch (err) {
+    return {
+      pilots: DEMO_PILOTS,
+      records: buildDemoCurrencyRecords(asOf),
+      source: 'fixtures',
+      apiError: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+export default async function PilotsPage() {
   const asOf = new Date();
   const asOfIso = asOf.toISOString().slice(0, 10) as IsoDate;
-  const records = buildDemoCurrencyRecords(asOf);
-  const index = indexCurrencyByPilotAndKind(records);
+  const { pilots, records, source, apiError } = await loadPageData(asOf);
+  const index = indexCurrencyByPilotAndKind(records as ReadonlyArray<CurrencyRecord>);
   const operatorsById = new Map(DEMO_OPERATORS.map((o) => [o.id, o]));
 
   return (
@@ -34,12 +98,19 @@ export default function PilotsPage() {
             Per-pilot currency matrix across the {CURRENCY_CATALOG.length}-item catalog in{' '}
             <code className="rounded bg-slate-100 px-1 py-0.5">@dnca/domain</code>. Status colour is
             computed by <code className="rounded bg-slate-100 px-1 py-0.5">statusFor()</code> using
-            the same logic that protects the database write path. Currently rendering deterministic
-            demo data; backend wiring lands once the API framework decision is made.
+            the same logic that protects the database write path.
           </p>
           <p className="mt-2 max-w-3xl text-xs text-slate-500">
-            As of <strong>{asOfIso}</strong>. {DEMO_PILOTS.length} pilots across{' '}
-            {DEMO_OPERATORS.length} operators.
+            As of <strong>{asOfIso}</strong>. {pilots.length} pilots across {DEMO_OPERATORS.length}{' '}
+            operators. Source:{' '}
+            <span
+              className={
+                source === 'api' ? 'font-semibold text-emerald-700' : 'font-semibold text-amber-700'
+              }
+            >
+              {source === 'api' ? 'live API' : 'fixtures (API not configured)'}
+            </span>
+            {apiError ? <span className="text-red-700"> · {apiError}</span> : null}
           </p>
         </div>
         <div className="flex shrink-0 flex-col gap-2">
@@ -80,7 +151,7 @@ export default function PilotsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {DEMO_PILOTS.map((pilot) => {
+              {pilots.map((pilot) => {
                 const operator = operatorsById.get(pilot.operatorId);
                 return (
                   <tr key={pilot.id} className="hover:bg-slate-50">
@@ -121,7 +192,7 @@ export default function PilotsPage() {
         <Legend />
       </div>
 
-      <Summary pilots={DEMO_PILOTS} index={index} asOfIso={asOfIso} />
+      <Summary pilots={pilots} index={index} asOfIso={asOfIso} />
     </div>
   );
 }
@@ -188,7 +259,7 @@ function Summary({
   index,
   asOfIso,
 }: {
-  pilots: ReadonlyArray<Pilot>;
+  pilots: ReadonlyArray<PilotRow>;
   index: ReadonlyMap<string, ReturnType<typeof buildDemoCurrencyRecords>[number]>;
   asOfIso: IsoDate;
 }) {

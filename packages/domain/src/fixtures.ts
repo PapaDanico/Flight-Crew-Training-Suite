@@ -29,9 +29,16 @@ import type {
 /**
  * Deterministic, type-only demo fixtures for development screens and tests.
  *
- * Two operators (JAK Demo, I-Fly Demo) and four pilots using the
- * Capt. Alpha One / F/O Bravo Two pattern prescribed by CLAUDE.md
- * §"Things to avoid" ("Don't store real pilot data in test or demo
+ * Demo operator → aircraft type mapping:
+ *   - I-Fly Air Solutions = F70/100 production-ready demo (4 pilots, rich
+ *     session content; the polished primary calibration)
+ *   - Jubba Airways Kenya = B737NG type-extensibility preview demo (2 pilots,
+ *     no session content yet — illustrates that AI prompts / KCAA exports
+ *     refuse to fabricate aviation facts until a B737-qualified TRI/TRE
+ *     populates the operational profile per ADR 0006)
+ *
+ * Pilots follow the Capt. Alpha One / F/O Bravo Two pattern prescribed by
+ * CLAUDE.md §"Things to avoid" ("Don't store real pilot data in test or demo
  * environments").
  *
  * Currency records are emitted per pilot only for kinds that are NOT
@@ -55,14 +62,25 @@ function addDays(base: Date, days: number): Date {
 const OP_JAK = '11111111-1111-1111-1111-111111111111' as OperatorId;
 const OP_IFLY = '22222222-2222-2222-2222-222222222222' as OperatorId;
 
-const FLEET_JAK_F70 = '11111111-aaaa-aaaa-aaaa-000000000001' as FleetId;
-const FLEET_JAK_F70_HGW = '11111111-aaaa-aaaa-aaaa-000000000002' as FleetId;
-const FLEET_IFLY_F100 = '22222222-aaaa-aaaa-aaaa-000000000001' as FleetId;
+// JAK's demo deployment is B737NG (preview profile). I-Fly's demo
+// deployment carries the F70/100 production-ready calibration with three
+// variants. Fleet UUIDs retain a stable prefix per operator.
+const FLEET_JAK_B737 = '11111111-aaaa-aaaa-aaaa-000000000001' as FleetId;
+const FLEET_IFLY_F70 = '22222222-aaaa-aaaa-aaaa-000000000001' as FleetId;
+const FLEET_IFLY_F70_HGW = '22222222-aaaa-aaaa-aaaa-000000000002' as FleetId;
+const FLEET_IFLY_F100 = '22222222-aaaa-aaaa-aaaa-000000000003' as FleetId;
 
-const P_ALPHA = '11111111-bbbb-bbbb-bbbb-000000000001' as PilotId;
-const P_BRAVO = '11111111-bbbb-bbbb-bbbb-000000000002' as PilotId;
-const P_CHARLIE = '22222222-bbbb-bbbb-bbbb-000000000001' as PilotId;
-const P_DELTA = '22222222-bbbb-bbbb-bbbb-000000000002' as PilotId;
+// F70/100 production-demo pilots (I-Fly)
+const P_ALPHA = '22222222-bbbb-bbbb-bbbb-000000000001' as PilotId;
+const P_BRAVO = '22222222-bbbb-bbbb-bbbb-000000000002' as PilotId;
+const P_CHARLIE = '22222222-bbbb-bbbb-bbbb-000000000003' as PilotId;
+const P_DELTA = '22222222-bbbb-bbbb-bbbb-000000000004' as PilotId;
+// B737NG preview-demo pilots (JAK) — no session fixtures: the preview
+// profile carries pendingPrimarySource on operational + AI content, so we
+// refuse to fabricate B737-specific exercises until a qualified TRI/TRE
+// populates the profile.
+const P_ECHO = '11111111-bbbb-bbbb-bbbb-000000000001' as PilotId;
+const P_FOXTROT = '11111111-bbbb-bbbb-bbbb-000000000002' as PilotId;
 
 export const DEMO_OPERATORS: ReadonlyArray<Operator> = [
   {
@@ -97,17 +115,24 @@ export const DEMO_OPERATORS: ReadonlyArray<Operator> = [
 
 export const DEMO_FLEETS: ReadonlyArray<Fleet> = [
   {
-    id: FLEET_JAK_F70,
+    id: FLEET_JAK_B737,
     operatorId: OP_JAK,
-    variant: 'F70',
-    displayName: 'JAK F70 Fleet',
+    variant: 'B737',
+    displayName: 'JAK B737NG Fleet (preview)',
     active: true,
   },
   {
-    id: FLEET_JAK_F70_HGW,
-    operatorId: OP_JAK,
+    id: FLEET_IFLY_F70,
+    operatorId: OP_IFLY,
+    variant: 'F70',
+    displayName: 'I-Fly F70 Fleet',
+    active: true,
+  },
+  {
+    id: FLEET_IFLY_F70_HGW,
+    operatorId: OP_IFLY,
     variant: 'F70-HGW',
-    displayName: 'JAK F70 HGW (5Y-MMB)',
+    displayName: 'I-Fly F70 HGW Fleet',
     active: true,
   },
   {
@@ -157,10 +182,11 @@ function pilotSpec(
 }
 
 const DEMO_PILOT_SPECS: ReadonlyArray<DemoPilotSpec> = [
+  // ---- I-Fly: F70/100 production-ready demo --------------------------------
   pilotSpec({
     id: P_ALPHA,
-    operatorId: OP_JAK,
-    fleetId: FLEET_JAK_F70_HGW,
+    operatorId: OP_IFLY,
+    fleetId: FLEET_IFLY_F70_HGW,
     fullName: 'Capt. Alpha One',
     licenceNumber: 'KCAA/DEMO/ATPL/0001',
     role: 'Captain',
@@ -170,8 +196,8 @@ const DEMO_PILOT_SPECS: ReadonlyArray<DemoPilotSpec> = [
   pilotSpec(
     {
       id: P_BRAVO,
-      operatorId: OP_JAK,
-      fleetId: FLEET_JAK_F70,
+      operatorId: OP_IFLY,
+      fleetId: FLEET_IFLY_F70,
       fullName: 'F/O Bravo Two',
       licenceNumber: 'KCAA/DEMO/CPL/0002',
       role: 'First Officer',
@@ -209,6 +235,27 @@ const DEMO_PILOT_SPECS: ReadonlyArray<DemoPilotSpec> = [
     role: 'First Officer',
     baseIcao: 'HKML',
     phase: 'ITR_FFS',
+  }),
+  // ---- JAK: B737NG type-extensibility preview demo -------------------------
+  pilotSpec({
+    id: P_ECHO,
+    operatorId: OP_JAK,
+    fleetId: FLEET_JAK_B737,
+    fullName: 'Capt. Echo Five',
+    licenceNumber: 'KCAA/DEMO/ATPL/0005',
+    role: 'Captain',
+    baseIcao: 'HKJK',
+    phase: 'Line',
+  }),
+  pilotSpec({
+    id: P_FOXTROT,
+    operatorId: OP_JAK,
+    fleetId: FLEET_JAK_B737,
+    fullName: 'F/O Foxtrot Six',
+    licenceNumber: 'KCAA/DEMO/CPL/0006',
+    role: 'First Officer',
+    baseIcao: 'HKJK',
+    phase: 'Line',
   }),
 ];
 
@@ -329,8 +376,8 @@ interface SessionSpec {
 
 const DEMO_SESSION_SPECS: ReadonlyArray<SessionSpec> = [
   {
-    sessionId: '11111111-dddd-dddd-dddd-000000000001' as SessionId,
-    operatorId: OP_JAK,
+    sessionId: '22222222-dddd-dddd-dddd-000000000003' as SessionId,
+    operatorId: OP_IFLY,
     pilotId: P_ALPHA,
     kind: 'LINE_CHECK',
     venue: 'AIRCRAFT',
@@ -341,7 +388,7 @@ const DEMO_SESSION_SPECS: ReadonlyArray<SessionSpec> = [
     overallGrade: S,
     signOffRole: 'LCE',
     signOffStatement:
-      'Annual Line Check completed in accordance with the JAK Operations Manual and KCARs 2025 ' +
+      'Annual Line Check completed in accordance with the I-Fly Operations Manual and KCARs 2025 ' +
       'requirements. Captain met all required standards across the sector.',
     debriefAuthor: INSTRUCTOR_LCE,
     debriefBody:
@@ -378,8 +425,8 @@ const DEMO_SESSION_SPECS: ReadonlyArray<SessionSpec> = [
     ],
   },
   {
-    sessionId: '11111111-dddd-dddd-dddd-000000000002' as SessionId,
-    operatorId: OP_JAK,
+    sessionId: '22222222-dddd-dddd-dddd-000000000004' as SessionId,
+    operatorId: OP_IFLY,
     pilotId: P_BRAVO,
     kind: 'OPC',
     venue: 'FFS',
@@ -688,8 +735,9 @@ export function tallyCompetencies(exercises: ReadonlyArray<Exercise>): Competenc
 // matrix the operator submits to KCAA per Reg 17(3) — the attestation that
 // the OM addresses every binding clause.
 //
-// For the demo, JAK gets two mappings (the two clauses we have verified
-// subjects for); I-Fly gets one. All other clauses render "Not yet mapped
+// For the demo, I-Fly (F70/100 production demo) gets two rich mappings; JAK
+// (B737NG preview demo) gets a single lightweight CRM mapping reflecting an
+// early-Phase-1 deployment. All other clauses render "Not yet mapped
 // (Phase 1 deliverable)" on the page.
 // ----------------------------------------------------------------------------
 
@@ -708,30 +756,30 @@ export interface OmCrossReferenceMapping {
 
 export const DEMO_OM_MAPPINGS: ReadonlyArray<OmCrossReferenceMapping> = [
   {
-    operatorId: OP_JAK,
+    operatorId: OP_IFLY,
     clauseShortRef: '§2.1.25',
     operatorOmSection: 'OM-A §8.4.3',
-    evidenceReference: 'JAK OM-A rev 12, p. 247 (Stabilised Approach Policy)',
-    mappedByUserName: 'Capt. Demo HoT (JAK)',
+    evidenceReference: 'I-Fly OM-A rev 12, p. 247 (Stabilised Approach Policy)',
+    mappedByUserName: 'Capt. Demo HoT (I-Fly)',
     mappedAt: ISO_DATETIME(new Date('2026-04-15T10:00:00Z')),
     notes:
-      'JAK gates: stabilised by 1,000 ft AAL IMC / 500 ft AAL VMC. Go-around mandatory below ' +
-      'gate if non-stabilised.',
-  },
-  {
-    operatorId: OP_JAK,
-    clauseShortRef: '§2.2.4',
-    operatorOmSection: 'OM-D §3.1 — CRM Recurrent Programme',
-    evidenceReference: 'JAK CRM Programme rev 3 (annual cycle, 6 hrs)',
-    mappedByUserName: 'Capt. Demo HoT (JAK)',
-    mappedAt: ISO_DATETIME(new Date('2026-04-18T10:00:00Z')),
+      'I-Fly gates: stabilised by 1,000 ft AAL IMC / 500 ft AAL VMC. Go-around mandatory ' +
+      'below gate if non-stabilised.',
   },
   {
     operatorId: OP_IFLY,
     clauseShortRef: '§2.2.4',
-    operatorOmSection: 'OM-D §4 — CRM/TEM',
-    evidenceReference: 'I-Fly Training Manual rev 2',
+    operatorOmSection: 'OM-D §3.1 — CRM Recurrent Programme',
+    evidenceReference: 'I-Fly CRM Programme rev 3 (annual cycle, 6 hrs)',
     mappedByUserName: 'Capt. Demo HoT (I-Fly)',
+    mappedAt: ISO_DATETIME(new Date('2026-04-18T10:00:00Z')),
+  },
+  {
+    operatorId: OP_JAK,
+    clauseShortRef: '§2.2.4',
+    operatorOmSection: 'OM-D §4 — CRM/TEM',
+    evidenceReference: 'JAK Training Manual rev 2',
+    mappedByUserName: 'Capt. Demo HoT (JAK)',
     mappedAt: ISO_DATETIME(new Date('2026-04-20T10:00:00Z')),
   },
 ];
