@@ -16,28 +16,27 @@ Active operator deployments target: **Jubba Airways Kenya (JAK)** and **I-Fly Ai
 
 The platform is the software layer of a **forward-deployed engineering** consultancy model (Palantir-inspired). It is not a generic SaaS. Each operator deployment is bespoke configuration on top of reusable platform primitives.
 
-The repo is **aircraft-type-agnostic at the spine, type-specific by deployment** (ADR 0006). F70/100 is the production-ready primary calibration; E190 is a preview profile; new types are a content task, not an engineering change.
-
-A frozen **prototype** lives under `/prototype/` as a single-file React artifact. Treat it as a frozen specification of the intended UX and data model. The production rebuild preserves its conceptual integrity while replacing browser-local storage with proper backend infrastructure.
+A frozen **prototype** lives under `/prototype/` as a single-file React artifact. Treat it as a frozen specification of the intended UX and data model. The production build preserves its conceptual integrity while replacing browser-local storage with proper backend infrastructure.
 
 ---
 
 ## Repository state (snapshot)
 
-Sprint 1 (foundation) and Sprint 2 (UI port) are shipped; Sprint 3 (hardening / exports) is substantially complete. The codebase today:
+Sprints 1–2 of the Operational MVP are shipped (write-path complete, web wired to API, WorkOS auth on). Sprint 3 hardening is in progress. The codebase today:
 
-- **Monorepo:** pnpm workspaces — `apps/web` + five `@dnca/*` packages.
-- **Frontend:** Next.js 15 App Router, React 18, Tailwind, lucide-react. Eight live routes (dashboard, pilots, pilots/[id], sessions, sessions/[id], aircraft, compliance, assessments) plus three KCAA export print views.
-- **Backend (current):** Next.js Route Handlers under `apps/web/app/api/*`. A dedicated Fastify/NestJS service is **deferred** — when it lands, the auth + audit middleware moves there. Don't add a separate backend app unless that decision is made explicitly (it's still listed in "Open questions").
-- **Database:** Postgres 15 schema in `packages/db` (Drizzle ORM — ADR 0005). Bootstrap migration `infra/migrations/0001_initial.sql` is hand-written and creates roles (`app_runtime`, `platform_admin`), all enum types, every tenant-scoped table with `operator_id`, RLS policies (ADR 0002), append-only audit triggers (ADR 0003), and `updated_at` triggers. CI runs the migration against Postgres 15 and asserts both RLS isolation and audit-log immutability.
-- **Domain types:** `@dnca/domain` is the single source of truth (ADR 0004). Pure TypeScript, no runtime deps. Every entity, enum, branded ID, and pure domain function lives here. Other packages depend on it; it depends on nothing.
-- **Regulatory ontology:** `@dnca/ontology` ships the KCARs 2025 model (LN 29/30/31/37/40/41/42 of 2026), ICAO Annex/Doc references, FAA 14 CFR + ACs, EASA Part-CAT/ORO/FCL, and the cross-reference matrix.
-- **AI:** `@dnca/prompts` ships versioned, citation-anchored prompt templates with Zod schemas, an `AircraftTypeProfile`-aware system block, prompt-cache markers, and a retry parser. `apps/web/app/api/assessments/generate/route.ts` is the server-side proxy (Anthropic key never reaches the browser, sliding-window per-IP rate limit, three-attempt parse-and-retry loop, JSON-to-stdout logging — AuditEvent emission is wired in when the API service lands).
-- **Exports:** `@dnca/exports` provides typed data assemblers; UI print views render under `/exports/*`. **Crew Currency Snapshot**, **OM Cross-Reference Matrix**, and **Pilot Training File** are live (KCAA-aligned, "Cmd-P → PDF"). Compliance Evidence Pack and Session Report are queued.
-- **Demo data:** deterministic fixtures in `@dnca/domain` (`DEMO_OPERATORS`, `DEMO_PILOTS`, `buildDemoCurrencyRecords(asOf)`). Same dataset every demo; dates rebase against `asOf`. The frozen-prototype naming convention (Capt. Alpha One, F/O Bravo Two …) is preserved.
-- **CI:** `.github/workflows/ci.yml` runs format-check, `pnpm -r typecheck`, `pnpm -r test`, plus a Postgres-15 service container that smoke-tests the migration, RLS, and audit immutability.
+- **Monorepo:** pnpm workspaces — `apps/web`, `apps/api`, and five `@dnca/*` packages.
+- **Frontend (`apps/web`):** Next.js 15 App Router, React 18, Tailwind, lucide-react, `@workos-inc/authkit-nextjs`. Live routes: dashboard, pilots, pilots/[id], sessions, sessions/[id], aircraft, compliance, assessments, login, callback, and three KCAA export print views under `/exports/*`. The web tier runs in three modes (decided per-request by `apps/web/lib/api-config.ts`): **workos** (signed-in session forwards a Bearer access token to the API), **demo** (`API_BASE_URL` + `DEMO_OPERATOR_ID` env, sends `x-demo-operator-id`), or **fixtures** (renders from `@dnca/domain` fixtures — CI and Vercel preview without a backend still produce usable UI). The page surfaces a source badge so a viewer always knows which mode is active.
+- **Backend (`apps/api`):** Fastify 5 (ADR 0007). Plugins: `auth` (WorkOS JWT verification, fails closed in production; synthetic `PLATFORM_ADMIN` for dev), `tenant` (`app.withOperatorScope()` opens a transaction and runs `SET LOCAL app.operator_id` — ADR 0002), `audit` (`app.emitAuditEvent()` — ADR 0003), `zod-validator` (Zod at the route boundary via `fastify-type-provider-zod`). Routes: `GET /health`, `pilots`, `currency`, `sessions` (each with full CRUD where applicable; pilot/currency/session integration tests in `apps/api/test/` exercise the RLS + audit path). Structured logging via pino.
+- **Database (`packages/db`):** Postgres 15 with Drizzle ORM (ADR 0005). Migrations in `infra/migrations/`: `0001_initial.sql` (hand-written: roles `app_runtime` + `platform_admin`, all enum types, every tenant-scoped table with `operator_id`, RLS policies, append-only audit triggers, `updated_at` triggers), `0002_fleet_variant_b737.sql` (additive enum extension for the B737 preview profile). CI runs both migrations against Postgres 15 and asserts RLS isolation and audit-log immutability.
+- **Domain types (`@dnca/domain`):** Single source of truth (ADR 0004). Pure TypeScript, no runtime deps. Every entity, enum, branded ID, and pure domain function lives here. Other packages depend on it; it depends on nothing.
+- **Regulatory ontology (`@dnca/ontology`):** KCARs 2025 model (LN 29/30/31/37/40/41/42 of 2026), ICAO Annex/Doc references, FAA 14 CFR + ACs, EASA Part-CAT/ORO/FCL, and the cross-reference matrix.
+- **AI (`@dnca/prompts` + `apps/web/app/api/assessments/generate/route.ts`):** Versioned, citation-anchored prompt templates with Zod schemas, an `AircraftTypeProfile`-aware system block, prompt-cache markers, retry parser. The assessment proxy keeps the Anthropic key server-side, applies a per-IP sliding-window rate limit, runs a three-attempt parse-and-retry loop, and logs generations as JSON to stdout. `AuditEvent ASSESSMENT_GENERATED` emission moves to `apps/api` when the route ports across.
+- **Exports (`@dnca/exports`):** Typed data assemblers; UI print views under `/exports/*`. **Crew Currency Snapshot**, **OM Cross-Reference Matrix**, and **Pilot Training File** are live (KCAA-aligned, Cmd-P → PDF). Compliance Evidence Pack and Session Report are queued.
+- **Demo data:** Deterministic fixtures in `@dnca/domain/fixtures.ts`. Two demo operators showcase the type-extensibility model: **JAK = B737NG preview** (no session fixtures — the platform refuses to fabricate B737-specific exercises until a B737-qualified TRI/TRE populates the profile); **I-Fly = F70/100 production-ready** (4 pilots, rich session and grading data). Same dataset every demo; dates rebase against `asOf`. The Alpha One / Bravo Two / Charlie Three / Delta Four naming convention is preserved.
+- **Infrastructure (`infra/terraform/`):** Terraform modules for the AWS `af-south-1` MVP topology (ADR 0010): VPC + subnets, ALB with host-based routing, ECS Fargate services for `api` + `web`, ECR repos, RDS Postgres 15 in private subnets, Secrets Manager bindings, IAM, security groups. `infra/docker-compose.yml` for local multi-service runs. `apps/api/Dockerfile` and `apps/web/Dockerfile` ship to ECR.
+- **CI (`.github/workflows/ci.yml`):** Three jobs — `typecheck + test` (format check, `pnpm -r typecheck`, `pnpm -r test`), `migration smoke test` (applies 0001 + 0002, asserts RLS isolation + audit immutability), `api integration tests` (applies migrations, seeds JAK/I-Fly demo operators + fleets, runs `pnpm --filter @dnca/api test` against a real Postgres 15).
 
-A prospective-operator demo walkthrough is in [`docs/demo/walkthrough.md`](./docs/demo/walkthrough.md). Deployment posture (Vercel demo + AWS `af-south-1` production) is in [`docs/deployment/README.md`](./docs/deployment/README.md).
+A prospective-operator demo walkthrough is in [`docs/demo/walkthrough.md`](./docs/demo/walkthrough.md). Deployment posture (Vercel demo + AWS `af-south-1` operator MVP) is in [`docs/deployment/README.md`](./docs/deployment/README.md) and ADRs 0009/0010.
 
 ---
 
@@ -71,6 +70,10 @@ Aviation safety-critical and regulatory-critical facts. If any of these become u
 - Grading scale: **AS / S / MS / BS** — operator convention; ICAO Doc 9868 PANS-TRG uses 1–5; alignment is a domain decision for Capt. Ng'ong'a
 
 These facts are encoded once in `@dnca/domain` as `F70_100_PROFILE` (and the back-compat export `AIRCRAFT_FACTS`). The AI prompt block reads from the profile; the UI reads from the profile; the database enum allows the profile's variants. Do not duplicate or rephrase them in code or content — import them.
+
+### B737NG (preview profile)
+
+The B737NG profile is in `@dnca/domain` for type-extensibility, but operational technique and AI calibration fields are `pendingPrimarySource = true` until populated by a B737-qualified TRI/TRE. **Do not fabricate B737-specific facts.** The AI prompt falls back to a generic examiner role for preview profiles; do not work around that fallback.
 
 ### SimAero Dinard FFS
 
@@ -108,97 +111,91 @@ If asked to claim otherwise, refuse and surface the discrepancy.
 
 ### Stack
 
-| Layer        | Choice                                                                                              | Status                                                                                  |
-| ------------ | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Frontend     | Next.js 15 (App Router) · React 18 · TypeScript strict · Tailwind · lucide-react                    | In use                                                                                  |
-| API surface  | Next.js Route Handlers (server-only) — `apps/web/app/api/*`                                         | Interim until a dedicated backend service is decided                                    |
-| Backend svc  | Fastify vs NestJS                                                                                   | Open — defer until Sprint 4 demands it                                                  |
-| Database     | PostgreSQL 15+ with row-level security (ADR 0002)                                                   | In use                                                                                  |
-| ORM/migrate  | Drizzle ORM + drizzle-kit (ADR 0005); custom SQL for RLS, triggers, roles                           | In use                                                                                  |
-| Auth         | WorkOS vs Clerk                                                                                     | Open — magic-link fallback envisaged                                                    |
-| Audit log    | Append-only `audit_events` table with `BEFORE UPDATE/DELETE` triggers (ADR 0003)                    | In use; CI asserts immutability                                                         |
-| AI           | Anthropic Claude API via `@anthropic-ai/sdk`; pinned model strings in `@dnca/domain`                | In use; Sonnet 4.6 for assessment, Opus 4.7 for drafting, Haiku 4.5 for summarisation   |
-| Object store | S3-compatible                                                                                       | Pending — for KCAA export archive + WORM audit-log shipping (Sprint 5)                  |
-| Hosting      | **Demo:** Vercel `fra1`. **Production:** AWS `af-south-1` (Cape Town) — Kenya DPA 2019 residency.   | Demo on Vercel; production region accepted, Azure South Africa North is fallback        |
-| Observabil.  | OpenTelemetry → Grafana Cloud or Datadog                                                            | Pending — Sprint 5                                                                      |
-| CI/CD        | GitHub Actions; manual production promotion gate                                                    | CI in place; promotion gate pending                                                     |
+| Layer        | Choice                                                                              | Status / ADR                                       |
+| ------------ | ----------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Frontend     | Next.js 15 (App Router) · React 18 · TypeScript strict · Tailwind · lucide-react    | In use                                             |
+| Web→API      | Three modes: workos session / demo header / fixtures (`apps/web/lib/api-config.ts`) | In use                                             |
+| Backend      | Fastify 5 with Zod + custom plugins (auth, tenant, audit)                           | In use — **ADR 0007**                              |
+| Database     | PostgreSQL 15+ with row-level security                                              | In use — **ADR 0002**                              |
+| ORM/migrate  | Drizzle ORM + drizzle-kit; raw SQL for RLS, triggers, role grants                   | In use — **ADR 0005**                              |
+| Auth         | WorkOS AuthKit (SSO + Magic Link); WorkOS Organization → Operator lookup            | In use — **ADR 0008**                              |
+| Audit log    | Append-only `audit_events` table with `BEFORE UPDATE/DELETE` triggers               | In use — **ADR 0003**; CI asserts immutability     |
+| AI           | Anthropic Claude API via `@anthropic-ai/sdk`; pinned model strings in `@dnca/domain`| In use; Sonnet 4.6 / Opus 4.7 / Haiku 4.5          |
+| Hosting (demo) | Vercel `fra1` — fixtures-only, no real operator data                              | In use                                             |
+| Hosting (prod) | AWS `af-south-1` (Cape Town) — Kenya DPA 2019 residency                            | Terraform in `infra/terraform/` — **ADR 0009/0010**|
+| Compute      | ECS Fargate (api + web), single ALB with host-based routing, RDS in private subnets | Terraform ready — **ADR 0010**                     |
+| Secrets      | AWS Secrets Manager (`DATABASE_URL`, `WORKOS_API_KEY`, `WORKOS_COOKIE_PASSWORD`, `ANTHROPIC_API_KEY`) | Wired through ECS task definitions     |
+| Observability| pino + CloudWatch Logs → OpenTelemetry → Grafana Cloud                              | pino in use; OTEL/Grafana queued                   |
+| CI/CD        | GitHub Actions; ECR push + `update-service --force-new-deployment` for rollouts     | CI in place; CD scripted, not yet workflow-driven  |
 
 ### Repository layout (actual)
 
 ```
 /
 ├── apps/
-│   └── web/                          # Next.js 15 frontend + API routes
-│       ├── app/
-│       │   ├── page.tsx              # Dashboard
-│       │   ├── layout.tsx
-│       │   ├── globals.css
-│       │   ├── pilots/               # /pilots, /pilots/[id]
-│       │   ├── sessions/             # /sessions, /sessions/[id]
-│       │   ├── aircraft/             # type-profile-driven
-│       │   ├── compliance/           # KCARs/ICAO/FAA/EASA matrix
-│       │   ├── assessments/          # AI MCQ generator UI
-│       │   ├── exports/              # KCAA print views
-│       │   │   ├── crew-currency-snapshot/
-│       │   │   ├── pilot-training-file/
-│       │   │   └── om-cross-reference-matrix/
-│       │   └── api/
-│       │       └── assessments/generate/route.ts
-│       ├── components/               # Shared web components
-│       ├── tailwind.config.ts
-│       ├── vercel.json
+│   ├── web/                          # Next.js 15 frontend
+│   │   ├── app/
+│   │   │   ├── page.tsx              # Dashboard
+│   │   │   ├── layout.tsx
+│   │   │   ├── pilots/               # /pilots, /pilots/[id]
+│   │   │   ├── sessions/             # /sessions, /sessions/[id]
+│   │   │   ├── aircraft/             # type-profile-driven
+│   │   │   ├── compliance/           # KCARs/ICAO/FAA/EASA matrix
+│   │   │   ├── assessments/          # AI MCQ generator UI
+│   │   │   ├── exports/              # KCAA print views
+│   │   │   ├── login/  callback/     # WorkOS AuthKit handshake
+│   │   │   └── api/
+│   │   │       └── assessments/generate/route.ts   # AI proxy
+│   │   ├── components/  lib/         # api-client.ts, api-config.ts
+│   │   ├── Dockerfile · vercel.json · tailwind.config.ts
+│   │   └── package.json
+│   └── api/                          # Fastify backend — ADR 0007
+│       ├── src/
+│       │   ├── server.ts             # buildApp() / start()
+│       │   ├── config.ts             # Zod-validated env loader
+│       │   ├── plugins/              # auth, tenant, audit, zod-validator
+│       │   └── routes/               # health, pilots, currency, sessions
+│       ├── test/                     # node:test integration suites
+│       ├── Dockerfile · .env.example
 │       └── package.json
 ├── packages/
 │   ├── domain/                       # @dnca/domain — single source of truth
-│   │   ├── src/
-│   │   │   ├── branded.ts            # OperatorId, PilotId, IsoDate, …
-│   │   │   ├── operator.ts, aircraft.ts, pilot.ts
-│   │   │   ├── currency.ts           # statusFor, mayBeNotApplicable, thresholds
-│   │   │   ├── currency-catalog.ts   # 23-item catalogue
-│   │   │   ├── competency.ts         # ICAO 8 competencies, grade scales
-│   │   │   ├── training.ts           # Session, Exercise, Grade, SignOff
-│   │   │   ├── document.ts           # OM-A/B/C/D, versions, KCAA submission
-│   │   │   ├── governance.ts         # AuditEvent, User, RoleAssignment
-│   │   │   ├── ai.ts                 # ANTHROPIC_MODELS, PromptVersion
-│   │   │   ├── aircraft-type-profile.ts  # ADR 0006 plug-in
-│   │   │   └── fixtures.ts           # DEMO_* deterministic fixtures
-│   │   └── test/                     # node:test + tsx
+│   │   └── src/  branded.ts · operator.ts · aircraft.ts · pilot.ts
+│   │             currency.ts · currency-catalog.ts · competency.ts
+│   │             training.ts · document.ts · governance.ts · ai.ts
+│   │             aircraft-type-profile.ts · fixtures.ts
 │   ├── ontology/                     # @dnca/ontology — regulatory citations
 │   │   └── src/  kcars-2025.ts · icao.ts · faa.ts · easa.ts · cross-reference.ts
 │   ├── db/                           # @dnca/db — Drizzle schema + client
-│   │   ├── src/
-│   │   │   ├── schema/               # operator, aircraft, pilot, currency,
-│   │   │   │                         # training, document, governance, enums
-│   │   │   ├── client.ts             # setOperatorScope (sets app.operator_id)
-│   │   │   └── audit.ts
-│   │   └── drizzle.config.ts         # out → ../../infra/migrations
+│   │   └── src/  schema/ · client.ts · audit.ts
 │   ├── prompts/                      # @dnca/prompts — versioned AI prompts
-│   │   └── src/  system-prompt.ts · assessment-generation.ts · schemas.ts (zod)
-│   │             parse.ts · version.ts (PROMPT_VERSIONS)
+│   │   └── src/  system-prompt.ts · assessment-generation.ts · schemas.ts
+│   │             parse.ts · version.ts
 │   └── exports/                      # @dnca/exports — KCAA export builders
 │       └── src/  crew-currency-snapshot.ts · pilot-training-file.ts
 │                 om-cross-reference-matrix.ts
 ├── prototype/                        # Frozen single-file React artifact
 ├── docs/
-│   ├── architecture/adr/             # 0001..0006 accepted ADRs (+ README)
+│   ├── architecture/adr/             # 0001..0010 accepted ADRs
 │   ├── audit/prototype-audit.md      # Phase-0 audit findings
-│   ├── demo/walkthrough.md           # 10-min demo script
+│   ├── demo/walkthrough.md
 │   └── deployment/README.md
 ├── infra/
-│   └── migrations/                   # 0001_initial.sql hand-written;
-│                                     # subsequent migrations drizzle-generated
-├── .github/workflows/ci.yml
+│   ├── migrations/                   # 0001_initial.sql (hand-written),
+│   │                                 # 0002_fleet_variant_b737.sql
+│   ├── terraform/                    # AWS af-south-1 MVP topology
+│   │                                 # alb · database · ecr · ecs · iam ·
+│   │                                 # network · secrets · security · …
+│   └── docker-compose.yml            # local multi-service dev
+├── .github/workflows/ci.yml          # typecheck+test · migration · api integration
 ├── pnpm-workspace.yaml               # apps/* + packages/*
-├── tsconfig.base.json                # strict + noUncheckedIndexedAccess +
-│                                     # exactOptionalPropertyTypes
+├── tsconfig.base.json                # strict + noUncheckedIndexedAccess + exactOptionalPropertyTypes
 ├── package.json                      # Node ≥22, pnpm 9
 ├── CLAUDE.md
 └── README.md
 ```
 
 ### ADR index
-
-Architectural decisions live in `docs/architecture/adr/`:
 
 | #    | Status   | Title                                                              |
 | ---- | -------- | ------------------------------------------------------------------ |
@@ -208,23 +205,34 @@ Architectural decisions live in `docs/architecture/adr/`:
 | 0004 | Accepted | `@dnca/domain` is the single source of truth for entity types      |
 | 0005 | Accepted | Drizzle ORM + drizzle-kit for the database layer                   |
 | 0006 | Accepted | `AircraftTypeProfile` as the type-extensibility plug-in pattern    |
+| 0007 | Accepted | Fastify for the backend API                                        |
+| 0008 | Accepted | WorkOS for authentication and SSO                                  |
+| 0009 | Accepted | AWS `af-south-1` (Cape Town) for production hosting                |
+| 0010 | Accepted | ECS Fargate MVP deployment topology on AWS `af-south-1`            |
 
-New architectural decisions get a new ADR in `docs/architecture/adr/NNNN-title.md`. ADRs are append-only; reversals are new ADRs that supersede.
+New architectural decisions get a new ADR in `docs/architecture/adr/NNNN-title.md` and a row in the index in that directory's README. ADRs are append-only; reversals are new ADRs that supersede.
 
 ### Multi-tenancy (ADR 0002)
 
-Single Postgres cluster, single schema, every tenant-scoped table carries `operator_id uuid not null`, every such table has an RLS policy keyed off `current_setting('app.operator_id')::uuid`. Application sets it per request:
+Single Postgres cluster, single schema, every tenant-scoped table carries `operator_id uuid not null`, every such table has an RLS policy keyed off `current_setting('app.operator_id')::uuid`. The Fastify `tenant` plugin opens a transaction and sets `app.operator_id` per request:
 
 ```ts
-import { setOperatorScope } from '@dnca/db';
-
-await db.transaction(async (tx) => {
-  await setOperatorScope(tx, operatorIdFromAuth);
-  // queries here see only operatorIdFromAuth's rows
+await app.withOperatorScope(operatorId, async (tx) => {
+  // queries here see only operatorId's rows
 });
 ```
 
-Forgetting `setOperatorScope` returns zero rows — the safe default. The `platform_admin` role bypasses RLS and any cross-tenant access must emit a dedicated audit event.
+Forgetting `withOperatorScope` returns zero rows — the safe default. The `platform_admin` role bypasses RLS; any cross-tenant access must emit a dedicated audit event.
+
+### Authentication (ADR 0008)
+
+The Fastify `auth` plugin verifies a WorkOS-issued JWT on every request, extracts the WorkOS Organization id, and resolves it to our `Operator.id` via `Operator.config.workosOrganizationId`. Routes never see WorkOS types — they receive a `{ user, operator, roles }` Principal.
+
+- **Production:** `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `NEXT_PUBLIC_WORKOS_REDIRECT_URI` set; web forwards the access token as Bearer; the API verifies via JOSE.
+- **Dev/demo:** missing WorkOS env → the auth plugin attaches a synthetic `PLATFORM_ADMIN` principal scoped to the JAK demo operator. The web tier sends `x-demo-operator-id` for explicit operator selection.
+- **Auto-provisioning is OFF.** First request from a new WorkOS Organization triggers an admin workflow — KCAA wants accountable onboarding.
+
+Per-user RBAC (the 11 roles in `@dnca/domain.USER_ROLE`) lives in our DB, not in WorkOS. WorkOS provides identity; we provide authorisation.
 
 ### Core data model
 
@@ -265,7 +273,7 @@ Currency catalogue (23 items, in `currency-catalog.ts`):
 
 Triggers reject `UPDATE` and `DELETE` regardless of role (including `platform_admin`). Break-glass is via an out-of-band `postgres` superuser session and is itself logged in an external incident record.
 
-Mutation routes must emit an `AuditEvent` — to be enforced by middleware in the API service. Today the assessment route logs to stdout as JSON; the proper `AuditEvent` emission lands with the API service.
+Every mutating Fastify route emits an `AuditEvent` via `app.emitAuditEvent(db, request, payload)` inside the same transaction as the state change. CI asserts immutability against a real Postgres in two of the three workflow jobs.
 
 ### Exports
 
@@ -288,7 +296,7 @@ Default to **PDF** for inspector-facing exports (print views are server-rendered
 ### Prerequisites
 
 - **Node ≥22** (see `.nvmrc` = `22`)
-- **pnpm 9** (the `packageManager` field pins this)
+- **pnpm 9** (pinned via the `packageManager` field; pnpm-action-setup reads it automatically — don't add a `version:` arg in the workflow)
 - **Postgres 15** locally for DB work (Docker is fine)
 
 ### Common commands
@@ -310,35 +318,39 @@ pnpm --filter @dnca/web dev           # dev server on :3000
 pnpm --filter @dnca/web build         # next build (full type-check)
 pnpm --filter @dnca/web start
 
+# API server
+pnpm --filter @dnca/api dev           # tsx watch on :3001 (default port)
+pnpm --filter @dnca/api test          # node:test integration tests
+pnpm --filter @dnca/api build         # tsc
+
 # Database (after pnpm install)
 docker run --rm -d --name fokker-pg -p 5432:5432 \
   -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=fokker_dev postgres:15
 
 DATABASE_URL=postgres://postgres:dev@localhost:5432/fokker_dev \
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/migrations/0001_initial.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/migrations/0002_fleet_variant_b737.sql
 
 # Generate a new migration after schema edits in packages/db/src/schema/
 pnpm --filter @dnca/db generate       # drizzle-kit generate; review the SQL
 pnpm --filter @dnca/db migrate        # drizzle-kit migrate
 pnpm --filter @dnca/db studio         # drizzle-kit studio
+
+# Multi-service local
+docker compose -f infra/docker-compose.yml up
 ```
 
-For local AI generation, set `ANTHROPIC_API_KEY` in `apps/web/.env.local`. Without it the route returns a config error rather than crashing.
+For local AI generation in `apps/web`, set `ANTHROPIC_API_KEY` in `apps/web/.env.local`. For the API, copy `apps/api/.env.example` to `apps/api/.env` and point `DATABASE_URL` at the `app_runtime` role. Missing WorkOS env in the API triggers the dev synthetic-principal path.
 
 ### CI expectations
 
-`.github/workflows/ci.yml` runs on every PR and on `main`:
+`.github/workflows/ci.yml` runs three jobs on every PR and on `main`:
 
-1. `pnpm install --frozen-lockfile`
-2. `pnpm format:check`
-3. `pnpm -r typecheck`
-4. `pnpm -r test`
-5. **Migration smoke test** in a Postgres 15 service container:
-   - applies `0001_initial.sql`
-   - asserts RLS isolates two tenants
-   - asserts `audit_events` rejects `UPDATE` and `DELETE`
+1. **`typecheck + test`** — `pnpm install --frozen-lockfile`, `pnpm format:check`, `pnpm -r typecheck`, `pnpm -r test`.
+2. **`migration smoke test (Postgres 15)`** — applies `0001_initial.sql` + `0002_fleet_variant_b737.sql`, asserts RLS isolates two tenants, asserts `audit_events` rejects `UPDATE` and `DELETE`.
+3. **`api integration tests (Postgres 15)`** — applies migrations, seeds JAK + I-Fly demo operators and fleets (B737 for JAK, F70/F70-HGW/F100 for I-Fly), runs `pnpm --filter @dnca/api test` against the live DB.
 
-A change that breaks any of these blocks merge. Don't disable the smoke test to make a PR green — fix the underlying issue.
+A change that breaks any of these blocks merge. Don't disable a job to make a PR green — fix the underlying issue.
 
 ---
 
@@ -348,7 +360,7 @@ A change that breaks any of these blocks merge. Don't disable the smoke test to 
 
 - **TypeScript everywhere.** No JavaScript except in build tooling that can't reasonably be TS (ADR 0001).
 - **Strict mode on.** No `any` without `// TODO(claude): why any?` and a follow-up issue. `tsconfig.base.json` enables `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` — array index access yields `T | undefined`; optional props really mean optional.
-- **ESM with explicit `.js` extensions.** Packages are `"type": "module"`; intra-package imports use `./foo.js` (not `./foo` and not `./foo.ts`) because that's what NodeNext/Bundler resolution and the `node:test`+`tsx` runner expect. Don't drop the extension.
+- **ESM with explicit `.js` extensions.** All packages are `"type": "module"`; intra-package imports use `./foo.js` (not `./foo` and not `./foo.ts`) because that's what NodeNext/Bundler resolution and the `node:test`+`tsx` runner expect. Don't drop the extension.
 - **Branded primitives** prevent identifier and date-string confusion: `OperatorId`, `PilotId`, `SessionId`, `IsoDate`, `IsoDateTime`. Build them with `as` casts at the data-source boundary only.
 - **Names are domain-aligned.** `pilot.medicalExpiry`, not `pilot.med_exp`. Spell out aviation terms: `proficiencyCheck`, not `pc`.
 - **File names are kebab-case.** Each entity gets one file in `@dnca/domain/src/<entity>.ts`; barrel re-exports in `index.ts`.
@@ -356,7 +368,7 @@ A change that breaks any of these blocks merge. Don't disable the smoke test to 
 
 ### Domain-first discipline (ADR 0004)
 
-`@dnca/domain` is the single source of truth for every entity, enum, branded ID, and pure domain function. Backend, frontend, prompts, exporters, and DB schemas import from it; nothing else defines a `Pilot`.
+`@dnca/domain` is the single source of truth for every entity, enum, branded ID, and pure domain function. Backend (`apps/api`), frontend (`apps/web`), prompts, exporters, and DB schemas all import from it; nothing else defines a `Pilot`.
 
 When an entity changes, the change lands in `@dnca/domain` first; downstream type-checks fail until they conform. That's the intended pressure direction.
 
@@ -365,48 +377,49 @@ When an entity changes, the change lands in `@dnca/domain` first; downstream typ
 - Tailwind utility classes only — no custom CSS unless tooling-required (print stylesheets are the exception).
 - Server Components by default; Client Components only when interactivity demands it.
 - Route module owns its components in `apps/web/app/<route>/_components/`; shared components live in `apps/web/components/`.
-- Data fetching via Server Components reading typed packages directly (`@dnca/domain` fixtures today; DB tomorrow). Avoid client-side `fetch` for first paint.
+- Data fetching: Server Components call into `apps/web/lib/api-client.ts`, which decides between workos / demo / fixtures modes per request. Never call the API from a Client Component — auth materials must not leak to the browser.
 - **No `localStorage` or `sessionStorage` for application data.** State goes through the server. Browser storage is for the frozen prototype only.
 
-### Backend / API
+### Backend (`apps/api`)
 
-- Routes organised by entity (`/api/pilots`, `/api/sessions`, …).
-- Service layer separates HTTP concerns from business logic; repositories wrap DB access. No raw SQL in handlers except for performance-critical paths.
-- Every mutation route emits an `AuditEvent` — to be enforced by middleware once the API service lands, not by hope.
-- Input validation via `zod` schemas at the API boundary (see `@dnca/prompts/schemas.ts` for the pattern).
-- The assessment route is the current reference for server-side AI integration: rate-limit → input validation → profile resolution → prompt build (cacheable static block + dynamic block) → parse-and-retry loop → typed response envelope. Match that shape when adding new AI routes.
+- Routes organised by entity (`pilots.ts`, `currency.ts`, `sessions.ts`).
+- Plugins handle cross-cutting concerns: `auth` decorates the request with `principal`; `tenant` provides `app.withOperatorScope()`; `audit` provides `app.emitAuditEvent()`; `zod-validator` enforces request and response schemas.
+- Every mutating route opens a transaction via `withOperatorScope`, emits an `AuditEvent` in the same transaction, and returns a typed response validated by Zod.
+- Input validation via `zod` schemas at the route boundary (`fastify-type-provider-zod`).
+- Integration tests use `app.inject()` — no HTTP listener needed. See `apps/api/test/pilots.test.ts` for the established pattern.
+- The web tier's assessment route is the reference for server-side AI integration. The same pattern (rate-limit → input validation → profile resolution → cacheable prompt build → parse-and-retry → typed envelope) ports to the API service when the AI route moves across.
 
 ### Database
 
 - Schema in `packages/db/src/schema/` (Drizzle); migrations in `infra/migrations/`.
 - **Forward-only.** A reverse migration is a new forward migration.
-- **Bootstrap is hand-written.** `0001_initial.sql` includes RLS policies, audit-log triggers, role grants, and the `updated_at` trigger function — drizzle-kit does not generate those. Subsequent additive migrations (new columns, indexes, tables) are drizzle-generated and reviewed before commit.
+- **Bootstrap is hand-written.** `0001_initial.sql` includes RLS policies, audit-log triggers, role grants, and the `updated_at` trigger function — drizzle-kit does not generate those. Subsequent additive migrations (new columns, indexes, tables, enum extensions like `0002_fleet_variant_b737.sql`) are hand-written or drizzle-generated; review the SQL before commit.
 - **RLS / trigger / function changes are hand-written** as post-table SQL migrations; never auto-generated.
-- Postgres enums in the bootstrap migration must stay in lock-step with the corresponding TypeScript unions in `@dnca/domain`. When you add a value on one side, add it on the other in the same change.
+- Postgres enums in `0001_initial.sql` must stay in lock-step with the corresponding TypeScript unions in `@dnca/domain`. When you add a value on one side, add it on the other in the same change.
 
 ### Testing
 
-- **Unit tests** with `node:test` + `tsx`: `node --test --import tsx 'test/**/*.test.ts'`. See `@dnca/domain/test/*.test.ts` for the established pattern.
-- **Integration tests** against a real Postgres (Testcontainers — to land alongside the DB-touching repositories).
+- **Unit tests** with `node:test` + `tsx`: `node --test --import tsx 'test/**/*.test.ts'`. See `@dnca/domain/test/*.test.ts` and `apps/api/test/*.test.ts` for the established patterns.
+- **API integration tests** use Fastify `app.inject()` against a real Postgres (CI provisions one; locally point at your Docker Postgres).
 - **End-to-end** for critical user journeys (Playwright — Sprint 4+).
-- Critical journeys: pilot creation, session logging, sign-off, export generation, expiry notification, audit-log integrity, AI assessment generation.
+- Critical journeys: pilot creation, session logging, sign-off, export generation, expiry notification, audit-log integrity, AI assessment generation, WorkOS sign-in.
 
 ### Security
 
-- All routes authenticated by default; explicit opt-out for the small set of public endpoints.
+- All routes authenticated by default; explicit opt-out for the small set of public endpoints (`/health`).
 - Authorisation at the service layer, not just the route layer — defence in depth.
-- Input validation via `zod` at API boundaries.
-- HTML-escape user-supplied text in all rendered output, including the export print views (the prototype's `printSessionReport` had an open XSS surface — don't reintroduce that pattern).
-- Rate-limit auth endpoints and AI proxy endpoints. The current per-IP sliding-window rate limit in the assessment route is in-memory and adequate for a single-region demo; production swaps in Redis/Upstash.
-- Secrets in environment, never committed. `apps/web/.env.local` for local development.
+- Input + output validation via Zod at API boundaries.
+- HTML-escape user-supplied text in all rendered output, including export print views (the prototype's `printSessionReport` had an open XSS surface — don't reintroduce that pattern).
+- Rate-limit auth endpoints and AI proxy endpoints. The assessment route's per-IP in-memory limit is fine for a single-region demo; production swaps in Redis/Upstash. The Fastify global limit is 200/minute.
+- Secrets in environment, never committed. Production secrets flow through AWS Secrets Manager → ECS task definition (ADR 0010). Local: `apps/web/.env.local`, `apps/api/.env`.
 - Never include real pilot PII in AI prompts. `sanitiseTopic()` in `@dnca/prompts` rejects licence-number-shaped input before it reaches Anthropic.
 
 ### Errors and observability
 
-- Structured logging (JSON to stdout); correlation IDs propagated.
+- Structured logging — pino in `apps/api`, JSON-to-stdout in `apps/web`. Correlation IDs propagated via `request.id` (UUID v4 generated per request in Fastify).
 - User-facing error messages are non-leaky; internal stack traces only to ops dashboards.
+- Top-level error handler maps `ZodError → 400`, `httpError → statusCode`, everything else → 500 with a generic message.
 - AI calls wrap in try/catch with timeout + retry; an Anthropic API blip must not take down a page.
-- The assessment route's `console.log(JSON.stringify({ event, model, promptVersion, … }))` pattern is the interim observability surface — fine for now; OpenTelemetry replaces it in Sprint 5.
 
 ---
 
@@ -422,17 +435,19 @@ A currency record has `validFrom`, `validTo` (computed from `validFrom` + cycle 
 - **EXPIRED** — ≤ 0 days
 - **NOT_APPLICABLE** — only valid for type-rating-derivative items during ITR
 
-`statusFor()` and `mayBeNotApplicable()` live in `@dnca/domain/currency.ts`. The dashboard, currency tracker, and KCAA exports all flow through these — they cannot drift.
+`statusFor()` and `mayBeNotApplicable()` live in `@dnca/domain/currency.ts`. The dashboard, currency tracker, KCAA exports, and the API's currency CRUD all flow through these — they cannot drift.
 
 **Prototype bug fixed in `@dnca/domain`:** medical and licence are never `NOT_APPLICABLE`, regardless of training phase. Only type-rating-derivative currencies (OPC, LPC, Line Check, Recurrent Ground) can be N/A during ITR. Don't reintroduce the prototype's blanket N/A behaviour.
 
-The dashboard counts at the **item level** (each pilot × currency cell), not at the pilot level — one pilot with three cautions counts three, not one. This is intentional (Phase-0 audit §2.5).
+The dashboard counts at the **item level** (each pilot × currency cell), not at the pilot level — one pilot with three cautions counts three, not one (Phase-0 audit §2.5).
+
+Currency mutations in the API follow a **regulated-records supersession** pattern: instead of `UPDATE`, a new currency row is `INSERT`ed and the prior row's `valid_to` is set to the new row's `valid_from - 1 day`. The audit log carries both rows. This preserves the historical record KCAA inspectors need.
 
 ### CBTA competency grading
 
 ICAO Doc 9868 PANS-TRG defines **8 core competencies** (encoded in `competency.ts`): Application of Procedures · Communication · Aeroplane Flight Path Management (Automation) · Aeroplane Flight Path Management (Manual Control) · Leadership & Teamwork · Problem Solving & Decision Making · Situation Awareness · Workload Management.
 
-The prototype mapped each exercise to a single competency via regex heuristic. **That is wrong.** Production grades all 8 competencies per exercise via observable behaviours. The session UI implements this; the radar chart aggregates across multi-competency exercises; operators can mark a competency `NOT_OBSERVED` for a given exercise where genuinely not observable.
+The prototype mapped each exercise to a single competency via regex heuristic. **That is wrong.** Production grades all 8 competencies per exercise via observable behaviours. The API's `sessions` route enforces this on write; the session UI implements it on read; the radar chart aggregates across multi-competency exercises; operators can mark a competency `NOT_OBSERVED` for a given exercise where genuinely not observable.
 
 ### Stabilised approach gate
 
@@ -458,6 +473,8 @@ Manuals are versioned per page, not per document. Each page carries last-revisio
 
 New aircraft types are content, not engineering. Create an `AircraftTypeProfile` in `@dnca/domain/aircraft-type-profile.ts` with status `preview`; populate manufacturer facts, operational profile, and AI calibration block when a type-qualified TRI/TRE clears the content; promote to `production-ready`. A `preview` profile's missing `technicalFactsBlock` makes the AI prompt fall back to a generic examiner role — the "don't generate fake aviation facts" rule is structural, not just advisory.
 
+The B737NG preview profile demonstrates the model end-to-end: a Postgres enum extension (`0002_fleet_variant_b737.sql`), a structurally-present `B737_PROFILE` in the domain, and JAK demo fleets that exercise the preview path without any fabricated aviation content.
+
 ---
 
 ## AI integration
@@ -473,7 +490,7 @@ New aircraft types are content, not engineering. Create an `AircraftTypeProfile`
 5. **PII sanitisation** — `sanitiseTopic()` rejects licence-number-shaped input.
 6. **Prompt caching** — `cache_control: ephemeral` on the static calibration block; reuse across requests.
 7. **Versioned prompts** — `PROMPT_VERSIONS.assessmentGeneration` bumps on any wording change; the version goes into the audit trail.
-8. **stdout JSON logging** today; `AuditEvent ASSESSMENT_GENERATED` emission lands with the API service.
+8. **stdout JSON logging** today; the route ports to `apps/api` so `AuditEvent ASSESSMENT_GENERATED` lands inside the same transactional middleware as the other mutations.
 
 ### Document drafting (future)
 
@@ -493,13 +510,13 @@ Pin model strings; do not rely on aliases. The model id used per generation is p
 
 ## Build sequence
 
-| Sprint | Weeks | Goal                                                                                                       | Status                          |
-| ------ | ----- | ---------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| 1      | 1–2   | Foundation — monorepo, `@dnca/domain`, Postgres schema, RLS, audit triggers, one tenant.                   | **Done**                        |
-| 2      | 3–4   | UI port — dashboard, pilots, sessions, aircraft, compliance pages; missing currency kinds added.           | **Done**                        |
-| 3      | 5–6   | Hardening — RBAC, KCAA exports, document version control, notification engine.                             | KCAA exports shipped; rest WIP. |
-| 4      | 7–8   | Domain depth — schema-validated AI **(done early)**, proper multi-competency CBTA, citation engine, per-operator config. | AI done; CBTA + citations WIP.  |
-| 5      | 9–10  | Production readiness — multi-tenant cutover, demo env, deployment automation, observability, security review, ODPC registration. | Demo deploy on Vercel; rest queued. |
+| Sprint | Weeks | Goal                                                                                                       | Status                                |
+| ------ | ----- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| 1      | 1–2   | Foundation — monorepo, `@dnca/domain`, Postgres schema, RLS, audit triggers, one tenant.                   | **Done**                              |
+| 2      | 3–4   | UI port + Operational MVP — dashboard/pilots/sessions/aircraft/compliance pages; Fastify API; WorkOS auth. | **Done**                              |
+| 3      | 5–6   | Hardening — RBAC, KCAA exports, document version control, notification engine.                             | KCAA exports shipped; RBAC + docs WIP |
+| 4      | 7–8   | Domain depth — schema-validated AI (done early), multi-competency CBTA, citation engine, per-operator config. | AI + CBTA done; citations + config WIP|
+| 5      | 9–10  | Production — multi-tenant cutover, deployment automation, observability, security review, ODPC registration.  | Vercel demo live; AWS Terraform ready |
 
 Each sprint ends with a deployable build and a demo to Capt. Ng'ong'a.
 
@@ -510,27 +527,27 @@ Each sprint ends with a deployable build and a demo to Capt. Ng'ong'a.
 - **Don't reintroduce 2018 regulations.** They are repealed.
 - **Don't reintroduce FORDEC.** T-DODAR is the standard.
 - **Don't use `localStorage` for real data.** Browser storage is for the prototype only.
-- **Don't generate fake/illustrative aviation facts.** If unsure about an F70 system detail, stop and ask. The product's credibility rests on technical accuracy.
-- **Don't bypass the audit log.** Every state change must be recorded. No "internal" writes that skip it.
-- **Don't store real pilot data in test or demo environments.** Demo fixtures only (Capt. Alpha One / F/O Bravo Two pattern).
+- **Don't generate fake/illustrative aviation facts.** If unsure about an F70 system detail, stop and ask. The product's credibility rests on technical accuracy. For preview profiles (B737NG), do not work around the generic examiner fallback.
+- **Don't bypass the audit log.** Every state change must be recorded. No "internal" writes that skip `app.emitAuditEvent()`.
+- **Don't call the API from a Client Component.** Auth materials must not reach the browser. Server Components only; `apps/web/lib/api-client.ts` is the single ingress point.
+- **Don't enable auto-provisioning for WorkOS Organizations.** First request from a new Organization triggers a manual DNCA admin workflow — KCAA wants accountable onboarding.
+- **Don't store real pilot data in test or demo environments.** Demo fixtures only (Alpha One / Bravo Two pattern).
 - **Don't duplicate aviation facts.** Import `F70_100_PROFILE` (or `AIRCRAFT_FACTS`) from `@dnca/domain`. A fact in two places will drift.
 - **Don't drop `.js` import extensions.** ESM + tsx + node:test all require them.
+- **Don't add a `version:` arg to the `pnpm/action-setup@v4` step.** It reads `packageManager` from `package.json`; an explicit arg conflicts.
 - **Don't anchor anything to a specific year or named CAA-AC document without checking** whether it's been superseded. KCAA Advisory Circulars at 2018 vintage are subordinate to KCARs 2025.
-- **Don't add a second backend app on a whim.** The Fastify/NestJS decision is still open; the Next.js Route Handler interim is intentional.
 
 ---
 
 ## Open questions
 
-Resolved decisions have moved to ADRs above. Still open, to be decided as work progresses (not blockers):
+Resolved decisions are recorded in ADRs above. Still open, to be decided as work progresses (not blockers):
 
 1. **Grading scale alignment** — keep AS/S/MS/BS or align to ICAO Doc 9868 1–5? Operator-by-operator or platform-wide? (Postgres carries both enums and a `grade_scale` discriminator today.)
-2. **Backend service framework** — Fastify (lean) vs NestJS (structured). Defer until Sprint 4 calls for it.
-3. **Auth provider** — WorkOS vs Clerk; magic-link fallback for operators without SSO.
-4. **Hosting region** — AWS `af-south-1` (preferred per `docs/deployment/`) vs Azure South Africa North (fallback).
-5. **CBTA grading granularity UX** — confirm the per-exercise multi-competency grading interaction model.
-6. **Notification channels** — email-only initially, or also SMS via Africa's Talking (popular Kenyan provider)?
-7. **Languages** — English only initially? Kiswahili in scope? French (for non-Kenyan East African operators)?
+2. **CBTA grading granularity UX** — confirm the per-exercise multi-competency grading interaction model.
+3. **Notification channels** — email-only initially, or also SMS via Africa's Talking (popular Kenyan provider)?
+4. **Languages** — English only initially? Kiswahili in scope? French (for non-Kenyan East African operators)?
+5. **NAT Gateway / private compute** for the AWS topology — Sprint 5 if a future operator's auditor flags public-IP-on-Fargate as a finding (ADR 0010 §"Things this defers").
 
 ---
 
@@ -552,10 +569,11 @@ A few practical notes:
 
 - `prototype/` — the original single-file React artifact (frozen reference)
 - `docs/regulatory/` — primary regulatory source PDFs (KCARs LNs, ICAO docs, FAA ACs, EASA AMC) [populate as files arrive]
-- `docs/architecture/adr/` — accepted ADRs
+- `docs/architecture/adr/` — accepted ADRs 0001–0010
 - `docs/audit/prototype-audit.md` — Phase-0 audit against project objectives
 - `docs/demo/walkthrough.md` — 10-minute prospective-operator demo script
 - `docs/deployment/README.md` — Vercel-demo + AWS-production deployment guide
+- `infra/terraform/README.md` — `terraform apply` runbook for the af-south-1 MVP
 
 When adding a new architectural decision, write an ADR in `docs/architecture/adr/NNNN-title.md` and add it to the index in that directory's README.
 
@@ -563,4 +581,4 @@ When adding a new architectural decision, write an ADR in `docs/architecture/adr
 
 _This file is the source of truth for Claude Code working in this repository. Update it when project direction changes; do not let it drift from reality._
 
-_Last updated: 27 May 2026 — reflects Sprint 1–3 shipped state (monorepo, RLS, audit triggers, three KCAA exports, AI assessment route, six accepted ADRs)._
+_Last updated: 27 May 2026 — reflects Sprints 1–2 of the Operational MVP shipped: Fastify API with WorkOS auth, AWS af-south-1 Terraform topology (ADRs 0007–0010), B737NG preview profile, and the three-mode web→API wiring._
