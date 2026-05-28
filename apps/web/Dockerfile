@@ -29,6 +29,12 @@ FROM node:22-alpine AS builder
 WORKDIR /repo
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Next.js SWC native binary needs libc6-compat on alpine (musl) — without
+# it `next build` dies loading the SWC binary, which is invisible on a
+# glibc dev machine. Must be on the BUILDER stage (where next build runs),
+# not just deps.
+RUN apk add --no-cache libc6-compat
+
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/apps/web/node_modules ./apps/web/node_modules
 COPY pnpm-workspace.yaml package.json tsconfig.base.json ./
@@ -51,7 +57,7 @@ RUN corepack enable && corepack prepare pnpm@9.0.0 --activate && pnpm exec next 
 FROM node:22-alpine AS runtime
 WORKDIR /app
 
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini libc6-compat
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0

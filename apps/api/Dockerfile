@@ -31,7 +31,8 @@ RUN pnpm install --frozen-lockfile --prod=false
 FROM node:22-alpine AS runtime
 WORKDIR /repo
 
-RUN apk add --no-cache tini
+# tsx bundles esbuild, whose native binary needs libc6-compat on alpine.
+RUN apk add --no-cache tini libc6-compat
 ENV NODE_ENV=production
 ENV PORT=3001
 ENV HOST=0.0.0.0
