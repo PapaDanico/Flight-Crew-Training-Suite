@@ -38,6 +38,13 @@ const ConfigSchema = z.object({
 
   // Logging
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+
+  // Observability. Structured logs (JSON to stdout) + correlation IDs are
+  // always on; an OTLP endpoint, when set, is where a future trace/metric
+  // exporter ships to (Grafana Cloud / Datadog, per ADR). SERVICE_NAME tags
+  // every log line and would tag spans.
+  SERVICE_NAME: z.string().default('dnca-api'),
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

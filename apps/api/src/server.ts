@@ -9,6 +9,7 @@ import { loadConfig, isProduction, assertAuthModeSafe } from './config.js';
 import authPlugin from './plugins/auth.js';
 import tenantPlugin from './plugins/tenant.js';
 import auditPlugin from './plugins/audit.js';
+import telemetryPlugin from './plugins/telemetry.js';
 import zodValidatorPlugin from './plugins/zod-validator.js';
 import { healthRoutes } from './routes/health.js';
 import { pilotRoutes } from './routes/pilots.js';
@@ -48,10 +49,26 @@ export async function buildApp() {
 
   const app = Fastify({
     logger: loggerConfig,
-    genReqId: () => crypto.randomUUID(),
+    // Honour an inbound correlation id (web → api) when it is a safe token,
+    // otherwise mint one. Bounds + charset prevent log-forging via the header.
+    genReqId: (req) => {
+      const incoming = req.headers['x-request-id'];
+      if (typeof incoming === 'string' && /^[A-Za-z0-9._-]{8,128}$/.test(incoming)) {
+        return incoming;
+      }
+      return crypto.randomUUID();
+    },
   });
 
   app.log.info({ authMode, nodeEnv: config.NODE_ENV }, 'auth_mode_resolved');
+  app.log.info(
+    {
+      serviceName: config.SERVICE_NAME,
+      otlpEndpoint: config.OTEL_EXPORTER_OTLP_ENDPOINT ?? null,
+      tracesExport: config.OTEL_EXPORTER_OTLP_ENDPOINT ? 'otlp' : 'disabled',
+    },
+    'telemetry_configured',
+  );
 
   // Top-level error handling — Zod errors → 400, everything else → 500.
   app.setErrorHandler((err, request, reply) => {
@@ -77,6 +94,7 @@ export async function buildApp() {
 
   await app.register(zodValidatorPlugin);
   await app.register(sensible);
+  await app.register(telemetryPlugin);
   await app.register(helmet);
   await app.register(cors, {
     origin: config.CORS_ORIGINS.split(',').map((s) => s.trim()),
