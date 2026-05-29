@@ -82,7 +82,7 @@ Generate one in B737 mode. Note the questions are noticeably more generic — an
 
 `/aircraft?typeId=F70_100`:
 
-> "F70/100 facts page. Engine, APU, hydraulics, OEI technique, fuel asymmetry. FDAP-mandatory flag computed per variant from KCARs Reg 56(2) — the platform knows which of the operator's fleet must run FDAP."
+> "F70/100 facts page. Engine, APU, hydraulics, OEI technique, fuel asymmetry. FDAP-mandatory flag computed per variant from the >27,000 kg MTOW rule — both F70 and F100 qualify. (The requirement lives in LN 29, the CAT-aeroplane operations regulation, and is restated for AOC holders in LN 42.) The platform knows which of the operator's fleet must run FDAP."
 
 Click the B737 button.
 
@@ -90,7 +90,17 @@ Click the B737 button.
 
 `/compliance`:
 
-> "9-domain cross-reference matrix: every domain mapped to its KCARs, ICAO, FAA, and EASA citations. Third Schedule structure. Sixth Schedule penalties. Every cell is a typed `Citation` from `@dnca/ontology` — same constants the AI prompt and the export use."
+> "9-domain cross-reference matrix: every domain mapped to its KCARs, ICAO, FAA, and EASA citations. Third Schedule structure (61 clauses, four sub-sections, transcribed from the gazette). Sixth Schedule penalties — verified verbatim against LN 42 r. 82. Every cell is a typed `Citation` from `@dnca/ontology` — the same constants the AI prompt and the exports use."
+
+> "Scroll to **KCARs 2025 source provenance**. Every binding Legal Notice is badged **verified** and links straight to its official **Kenya Law** record — LN 29 through 42, titles and effective dates confirmed against primary source. If we ever cite a notice we haven't confirmed, it shows **provisional** in amber, everywhere it appears. An inspector is never shown an unverified regulation as settled fact — that discipline is built into the data model, not a promise."
+
+### 7b. Per-operator configuration `/operators` — 45 s
+
+> "The platform is one spine, configured per operator. Each operator card shows their stabilised-approach gate heights (KCARs leaves these to the operator's OM-A — we don't hardcode them), grading scale (AS/S/MS/BS or ICAO 1–5), fuel policy, and OpSpec chips — RVSM, RNP, Cat II/III, LVO, EDTO. Branding swatches too. JAK and I-Fly are different deployments of the same engine."
+
+### 7c. Scheduling + notifications `/scheduling`, `/notifications` — 60 s
+
+> "`/scheduling` turns the expiry cascade into a booking plan — what has to be booked now, what to plan, what's overdue — grouped by urgency with a booking-lead-time buffer. `/notifications` is the alert engine: one digest per crew member, channels chosen by their most-severe item (email / SMS / Telegram), with per-band de-duplication so nobody is pestered twice for the same 30-day band. Today it shows the dry-run plan; turning on real sending is a provider switch, not a rebuild."
 
 ### 8. Close — 30 s
 
@@ -114,10 +124,9 @@ Click the B737 button.
 
 ## What's NOT in the demo (yet) — be honest if asked
 
-- Writes: the API + auth layer is gated on the framework/auth-provider decisions. Today's surface is read-only.
-- Notifications: email expiry reminders are Sprint 3.
+- Writes: the API + auth layer is gated on the auth-provider decision (WorkOS shelved for now on cost). Today's web surface renders from deterministic fixtures; the DB-backed write path (Fastify + Postgres RLS + append-only audit) is built and tested, awaiting the hosting/auth go-ahead.
+- Notification **sending**: the planning, digesting, and per-band de-dup are live as a dry-run; real dispatch needs a provider/secret choice (email — Resend/SES; SMS — Africa's Talking; Telegram).
 - KCAA submission letter auto-generation: Sprint 3.
 - Document version diff view: Sprint 3.
-- SMS notifications via Africa's Talking: post-MVP.
 
 The pitch isn't "this is finished" — it's "this is the spine, calibrated to your aircraft type, and Phase 2 is where it becomes your system of record."
