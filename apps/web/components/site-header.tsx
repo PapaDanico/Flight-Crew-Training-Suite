@@ -176,6 +176,7 @@ function DesktopMenu({
               key={child.href}
               href={child.href}
               role="menuitem"
+              onClick={() => setOpen(false)}
               aria-current={isActive(child.href) ? 'page' : undefined}
               className={`block px-4 py-2 text-sm hover:bg-amber-50 ${
                 isActive(child.href) ? 'font-semibold text-navy-900' : ''
