@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Plane } from 'lucide-react';
 import { AuthStatus } from './auth-status';
 import { PrimaryNav } from './primary-nav';
 
@@ -14,9 +13,14 @@ export function SiteHeader() {
     <header className="border-b-4 border-amber-500 bg-navy-900 text-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
         <Link href="/" className="flex min-w-0 items-center gap-3">
-          <div className="shrink-0 rounded bg-amber-500 p-2">
-            <Plane className="h-5 w-5 text-navy-900" />
-          </div>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-amber-500/60">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/logo-badge.png"
+              alt="DN Consultancy"
+              className="h-10 w-10 object-contain"
+            />
+          </span>
           <div className="min-w-0">
             <div className="truncate text-sm font-bold tracking-tight sm:text-base">
               Flight Crew Training Suite
