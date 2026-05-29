@@ -62,10 +62,10 @@ If asked to claim otherwise, refuse and surface the discrepancy.
 
 - Primary binding law: **KCARs 2025** — LN 29, 30, 31, 37, 40, 41, 42 of 2026
 - **LN 42/2026 Third Schedule** is the binding OM content list. Verified against the gazetted notice (Kenya Gazette Supp. No. 52, 6 Mar 2026), its CONTENTS are: **§2.1 General (39 clauses), §2.2 Aircraft operating information (13), §2.3 Routes/aerodromes/heliports (6), §2.4 Training (3)** — 61 clauses total. (Supersedes the earlier "§2.1 = 34 / §2.2 = 12 training topics" summary, which did not match the gazette.)
-- **Reg 17(3)** — manuals submitted to KCAA at least 30 days before intended implementation; implementation before approval prohibited
-- **Reg 32(3) and 38(3)** — Human Factors statutory in checklist design
-- **Reg 56(2)** — FDAP mandatory for aircraft >27,000 kg MTOW (both F70 and F100 qualify)
-- **Reg 84** — 12-month transition deadline ~06 March 2027 unless extended by Cabinet Secretary
+- **Reg 17(3)** (LN 42) — manuals submitted to KCAA at least 30 days before intended implementation; implementation before approval prohibited
+- **Human Factors in checklist design** — **LN 29/2026 reg 15(2)** ("the design and utilization of checklist … shall observe human factors principles"). _Corrected 29 May 2026: the earlier "reg 32(3) and 38(3)" was repealed-LN 126/2018 numbering — in the gazetted LN 29, reg 32 is cargo-compartment fire suppression and reg 38 is use of oxygen._
+- **FDAP mandatory for aircraft >27,000 kg MTOW** (both F70 and F100 qualify) — stated in **LN 42** (Safety Programme & Management System reg, sub-para (2)); also ICAO Annex 6. _Corrected: NOT "LN 29 reg 56(2)" — in LN 29 reg 56 is en-route one-engine-inoperative performance. LN 29 reg 6(2)(a) carries a parallel >27,000 kg threshold for aircraft tracking._
+- **Reg 84** (LN 42) — 12-month transition deadline ~06 March 2027 unless extended by Cabinet Secretary
 - **2018 regulations are repealed.** KCAA Advisory Circulars remain at 2018 vintage as subordinate guidance only. Where AC and KCARs 2025 conflict, the regulation prevails. Never anchor new code or content to the 2018 regulations.
 
 ### Decision framework
@@ -75,7 +75,7 @@ If asked to claim otherwise, refuse and surface the discrepancy.
 ### Data and retention
 
 - Training records retention: **5-year minimum** per KCARs; some items lifetime of licence
-- FDR post-event retention: **60 days** (reg 18(3)(i))
+- FDR post-event retention: **60 days** — per the **Aircraft Accident and Incidents Investigation Regulations** (LN 29 reg 87 mandates preservation of flight-recorder records and cross-refers that instrument for the period). _Corrected: not "LN 29 reg 18(3)(i)" — LN 29 reg 18 is threshold crossing height._
 - **Kenya Data Protection Act 2019** applies — DNCA is the data controller; registration with the Office of the Data Protection Commissioner is required; breach notification within 72 hours
 
 ---

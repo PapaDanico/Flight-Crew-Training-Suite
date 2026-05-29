@@ -84,12 +84,22 @@ Read LN 50 (Personnel Licensing) in full and checked the FCTS currency catalogue
 
 Only a _stakeholder-comments matrix_ for the **Civil Aviation (Fatigue Management) Regulations** is present (no gazetted notice), consistent with the earlier finding that the FTL/FRMS instrument is not yet in force. The FCTS correctly does not assert FTL limits; no change needed. (Relevant to the sister rostering product, not this one.)
 
-## 3. Remaining ❓ (sub-regulation granularity only)
+### 1.7 LN 29 read in full — operational sub-regulations corrected ✅ (this pass)
 
-The instrument-level facts (numbers, titles, dates) are all now confirmed. What remains is **sub-regulation-number** confirmation, blocked because the Kenya Law full text returns HTTP 403 to automated fetch and the LN 29 gazette PDF is not on the drive:
+The gazetted **LN 29 of 2026** PDF (Kenya Gazette Supp. No. 40, 3 Mar 2026) was supplied and read. Three operational citations the platform carried were **wrong — they were the repealed LN 126/2018 numbers** and did not match the gazette:
 
-1. The exact sub-numbers of the operational citations in **LN 29** — FDAP `56(2)`, FDR retention `18(3)(i)`, HF-in-checklists `32(3)`/`38(3)`. These sub-numbers come from CLAUDE.md (Capt. Ng'ong'a's source); the LN 29 _instrument_ is now confirmed, but the sub-paragraphs were not re-read. To close: add the LN 29 PDF to the drive.
-2. Exact **LN 42 regulation number** for the FDAP/SMS clause (§1.5) — couldn't be pinned from the flattened OCR.
+| Topic                              | Was (LN 126/2018 numbering) | Correct (gazetted LN 29/2026)                                                                                                                                                                      |
+| ---------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Human Factors in checklist design  | reg 32(3) & 38(3)           | **reg 15(2)** — _"the design and utilization of checklist … shall observe human factors principles"_                                                                                               |
+| FDAP / >27,000 kg                  | "LN 29 reg 56(2)"           | **LN 42** (Safety Programme & Management System reg, sub-para (2)); LN 29 reg 56 is _en-route one engine inoperative_. LN 29 reg 6(2)(a) carries a parallel >27,000 kg aircraft-tracking threshold |
+| FDR post-event retention (60 days) | "LN 29 reg 18(3)(i)"        | **LN 29 reg 87** preserves flight-recorder records and cross-refers the period to the **Aircraft Accident & Incidents Investigation Regulations**; LN 29 reg 18 is _threshold crossing height_     |
+
+Corrected in `kcars-2025.ts` (`REG_15_2`, `REG_FDAP_LN42`, `REG_87_FLIGHT_RECORDER`; old `REG_32_3`/`REG_38_3`/`REG_56_2`/`REG_18_3_I` removed), the AI system prompt, the domain cross-reference matrix, **and CLAUDE.md's "Things you must not get wrong" list** (which itself carried the 2018 numbers). LN 29 is now fully `primarySourceVerified`.
+
+## 3. Remaining ❓
+
+1. Exact **LN 42 regulation number** for the FDAP/SMS clause (§1.5) — couldn't be pinned from the flattened OCR (the LN 42 PDF text is OCR-flattened; the substance is verbatim-confirmed).
+2. ~~LN 29 operational sub-numbers (HF / FDAP / FDR)~~ ✅ **done** — LN 29 read in full (§1.7); CLAUDE.md corrected.
 3. ~~LN 29/30/31/37/41 subjects, numbers, dates~~ ✅ **done** — confirmed via Kenya Law (§1.6).
 4. ~~Sixth Schedule penalty band values (Reg 82)~~ ✅ **done** — see §1.3.
 5. ~~Personnel Licensing (LN 50) currency cadences~~ ✅ **done** — see §1.4.

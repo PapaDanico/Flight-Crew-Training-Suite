@@ -23,7 +23,7 @@ export const LN_29_2026: RegulatoryInstrument = {
   authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/29/eng@2026-03-03',
   primarySourceVerified: true,
   notes:
-    'The CAT-aeroplane operations regulation (distinct from LN 47, General Aviation — Aeroplanes). Home of the operational regs the platform cites: FDAP (>27,000 kg), FDR retention, and Human-Factors-in-checklists. FDAP/>27,000 kg is also restated verbatim in LN 42. Reg sub-numbers (56(2), 18(3)(i), 32(3)/38(3)) per CLAUDE.md; Kenya Law full-text not machine-fetchable to re-confirm the sub-numbers.',
+    'CAT-aeroplane operations regulation (distinct from LN 47, General Aviation — Aeroplanes). Read from the gazette PDF: Human-Factors-in-checklists is reg 15(2); flight-recorder-records preservation is reg 87 (period per the Accident Investigation Regs); reg 6(2)(a) carries a >27,000 kg aircraft-tracking threshold. FDAP is in LN 42, not LN 29. The earlier 32(3)/38(3)/56(2)/18(3)(i) citations were repealed-LN 126/2018 numbering and have been corrected.',
 };
 
 export const LN_30_2026: RegulatoryInstrument = {
@@ -183,32 +183,28 @@ export const REG_17_3: Citation = {
   subject: 'Manuals submitted to KCAA at least 30 days before intended implementation',
 };
 
-export const REG_32_3: Citation = {
+/**
+ * Human Factors in checklist design — verified against the gazetted LN 29 of
+ * 2026, reg 15(2): "The design and utilization of checklist in subregulation (1)
+ * shall observe human factors principles." (The earlier `REG_32_3`/`REG_38_3`
+ * citations carried the repealed LN 126/2018 numbering — in LN 29, reg 32 is
+ * cargo-compartment fire suppression and reg 38 is use of oxygen. Corrected.)
+ */
+export const REG_15_2: Citation = {
   instrument: LN_29_2026,
-  section: '32(3)',
-  subject: 'Human Factors statutory in checklist design',
-};
-
-export const REG_38_3: Citation = {
-  instrument: LN_29_2026,
-  section: '38(3)',
-  subject: 'Human Factors statutory in checklist design (companion to 32(3))',
-};
-
-export const REG_56_2: Citation = {
-  instrument: LN_29_2026,
-  section: '56(2)',
-  subject: 'FDAP mandatory for aircraft > 27,000 kg MTOW',
+  section: '15(2)',
+  subject: 'Design and utilisation of checklists shall observe human factors principles',
 };
 
 /**
- * The FDAP / >27,000 kg requirement is also stated verbatim in LN 42 (read from
- * the gazette: an operator of an aeroplane with MTOM in excess of 27 000 kg
- * "shall establish and maintain a flight data analysis programme as part of its
- * safety management system"), under the "Safety Programme and Management System"
- * regulation, sub-paragraph (2). LN 29 (CAT — Aeroplanes) is the operational
- * home of the requirement; LN 42 restates it for AOC holders. Confirm the exact
- * LN 42 regulation number against the gazette before citing it in an export.
+ * FDAP / >27,000 kg. Verified against LN 29: reg 56 is "En-route one engine
+ * inoperative" (a performance limitation), NOT FDAP — the old `REG_56_2`
+ * citation was repealed-2018 numbering. The FDAP-as-part-of-SMS mandate is
+ * stated verbatim in LN 42 ("an operator of an aeroplane with MTOM in excess of
+ * 27 000 kg shall establish and maintain a flight data analysis programme as
+ * part of its safety management system", Safety Programme and Management System
+ * reg, sub-para (2)); use this citation. Aircraft-tracking carries a parallel
+ * >27,000 kg threshold at LN 29 reg 6(2)(a).
  */
 export const REG_FDAP_LN42: Citation = {
   instrument: LN_42_2026,
@@ -216,10 +212,19 @@ export const REG_FDAP_LN42: Citation = {
     'FDAP required as part of the SMS for aeroplanes with MTOM > 27,000 kg (Safety Programme and Management System reg, sub-para (2))',
 };
 
-export const REG_18_3_I: Citation = {
+/**
+ * Flight recorder records — verified against LN 29 reg 87: the operator shall
+ * preserve flight recorder records after an accident/incident and retain them
+ * "as determined in accordance with the Civil Aviation (Aircraft Accident and
+ * Incidents Investigation) Regulations." The 60-day post-event retention figure
+ * lives in those Accident Investigation Regulations, not in LN 29 reg 18 (which
+ * is "threshold crossing height" — the old reg 18(3)(i) was 2018 numbering).
+ */
+export const REG_87_FLIGHT_RECORDER: Citation = {
   instrument: LN_29_2026,
-  section: '18(3)(i)',
-  subject: 'FDR post-event retention 60 days',
+  section: '87',
+  subject:
+    'Preservation of flight recorder records after accident/incident (retention period per the Aircraft Accident & Incidents Investigation Regulations — 60 days)',
 };
 
 export const REG_84: Citation = {

@@ -21,7 +21,7 @@ import {
   ICAO_DOC_9966,
   ICAO_DOC_10000,
 } from './icao.js';
-import { LN_29_2026, LN_30_2026, LN_31_2026, LN_42_2026, REG_56_2 } from './kcars-2025.js';
+import { LN_29_2026, LN_30_2026, LN_31_2026, LN_42_2026, REG_FDAP_LN42 } from './kcars-2025.js';
 
 /**
  * Domain-level cross-reference matrix. Each row is a regulatory subject area
@@ -80,7 +80,7 @@ export const DOMAIN_CROSS_REFERENCE: ReadonlyArray<DomainCrossReference> = [
   },
   {
     domain: 'FDAP / FOQA',
-    kcars: [REG_56_2],
+    kcars: [REG_FDAP_LN42],
     faa: [{ instrument: FAA_AC_120_82 }],
     easa: [{ instrument: EASA_PART_ORO, section: 'ORO.AOC.130' }],
     icao: [{ instrument: ICAO_DOC_10000 }],

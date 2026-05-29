@@ -6,9 +6,8 @@ import {
   LN_29_2026,
   LN_42_2026,
   REG_17_3,
-  REG_32_3,
-  REG_38_3,
-  REG_56_2,
+  REG_15_2,
+  REG_FDAP_LN42,
   formatCitation,
 } from '@dnca/ontology';
 
@@ -65,9 +64,8 @@ ${op.notes ? `\n${op.notes}\n` : ''}
 # Regulatory anchors that must be cited correctly
 
 - ${formatCitation(REG_17_3)} — 30-day pre-implementation submission window
-- ${formatCitation(REG_32_3)} and ${formatCitation(REG_38_3)} — Human Factors
-  statutory for checklist design
-- ${formatCitation(REG_56_2)} — FDAP mandatory for aircraft > 27,000 kg MTOW
+- ${formatCitation(REG_15_2)} — Human Factors principles statutory for checklist design
+- ${formatCitation(REG_FDAP_LN42)} — FDAP mandatory for aircraft > 27,000 kg MTOW
 - ${formatCitation({
     instrument: LN_42_2026,
     section: 'Third Schedule',
@@ -160,8 +158,8 @@ ${profile.manufacturerFacts.variants
 # Regulatory anchors
 
 - ${formatCitation(REG_17_3)} — 30-day pre-implementation submission
-- ${formatCitation(REG_32_3)} — Human Factors in checklist design
-- ${formatCitation(REG_56_2)} — FDAP mandatory > 27,000 kg MTOW
+- ${formatCitation(REG_15_2)} — Human Factors in checklist design
+- ${formatCitation(REG_FDAP_LN42)} — FDAP mandatory > 27,000 kg MTOW
 - ${formatCitation({
     instrument: LN_42_2026,
     section: 'Third Schedule',
