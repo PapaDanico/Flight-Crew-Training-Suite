@@ -299,7 +299,13 @@ export function indexCurrencyByPilotAndKind(
   const m = new Map<string, CurrencyRecord>();
   for (const r of records) {
     if (r.supersededAt !== undefined) continue;
-    m.set(`${r.pilotId}|${r.kind}`, r);
+    const key = `${r.pilotId}|${r.kind}`;
+    const existing = m.get(key);
+    // Keep the latest non-superseded record per (pilot, kind). Don't rely on
+    // array order: a re-issued currency must win over an older row.
+    if (existing === undefined || Date.parse(r.createdAt) >= Date.parse(existing.createdAt)) {
+      m.set(key, r);
+    }
   }
   return m;
 }

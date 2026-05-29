@@ -93,7 +93,10 @@ export interface KCAASubmission {
 export const REG_17_3_LEAD_DAYS = 30 as const;
 
 export function calculateSubmissionDeadline(plannedImplementation: Date): Date {
+  // Compute in UTC. IsoDate values are parsed as UTC midnight, so local-time
+  // getDate()/setDate() would shift the Reg 17(3) deadline by a day on any
+  // server not running in UTC — a regulatory date must not drift.
   const d = new Date(plannedImplementation);
-  d.setDate(d.getDate() - REG_17_3_LEAD_DAYS);
+  d.setUTCDate(d.getUTCDate() - REG_17_3_LEAD_DAYS);
   return d;
 }

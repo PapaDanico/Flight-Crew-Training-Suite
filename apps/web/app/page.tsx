@@ -153,7 +153,7 @@ export default function DashboardPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Panel icon={<TrendingUp className="h-4 w-4" />} title="Fleet distribution">
+        <Panel icon={<TrendingUp className="h-4 w-4" />} title="Crew by operator">
           <DistList rows={operatorRows} total={totalPilots} barClass="bg-navy-700" />
         </Panel>
 
