@@ -5,28 +5,25 @@ import type { Citation, RegulatoryInstrument } from './citation.js';
  * 2026. The 2018 regulations are repealed.
  *
  * Verification state (`primarySourceVerified`) records whether the instrument's
- * subject/number was checked against the gazetted PDF on file. Of the
- * "binding-law" set named in CLAUDE.md (29/30/31/37/40/41/42), only **LN 40 and
- * LN 42** are present in the supplied gazette PDFs and confirmed from primary
- * source. The gazette set on the drive also includes LN 18 (Communication
- * Procedures), 20 (Approved Maintenance Organizations), 21 (Environmental
- * Protection — Aircraft Noise), 23 (Nationality & Registration Marks),
- * 24 (CORSIA), 32 (Safety Management), 47 (Operation of Aircraft — General
- * Aviation — Aeroplanes) and 50 (Personnel Licensing). The specific notices for
- * LN 29/30/31/37/41 are **not** in the supplied set, so their subjects/numbers
- * remain provisional pending those PDFs — see kcars-2025-alignment.md §3.
- *
- * Effective dates per CLAUDE.md / README.
+ * subject/number/date was checked against the authoritative primary source.
+ * All seven binding-law notices (29/30/31/37/40/41/42) are now confirmed:
+ * LN 40 and LN 42 against the gazette PDFs on file, and all seven against the
+ * official Kenya Law record (`authoritativeUrl`, the Akoma-Ntoso URN). The
+ * effective dates fall in three gazette batches: 3 Mar 2026 (LN 29/30/31),
+ * 6 Mar 2026 (LN 37/40/41/42) and 25 Mar 2026 (the later operational set).
+ * See kcars-2025-alignment.md §1.6.
  */
 export const LN_29_2026: RegulatoryInstrument = {
   framework: 'KCARs',
   instrumentId: 'LN-29-2026',
   shortLabel: 'LN 29/2026',
-  longLabel: 'Legal Notice 29 of 2026 — Operations (Aeroplanes)',
+  longLabel:
+    'Legal Notice 29 of 2026 — Operation of Aircraft for Commercial Air Transport (Aeroplanes)',
   effectiveDate: '2026-03-03',
-  primarySourceVerified: false,
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/29/eng@2026-03-03',
+  primarySourceVerified: true,
   notes:
-    'Provisional — the LN 29 gazette PDF is not in the supplied set. Operational regs cited against it (FDAP, FDR retention, HF in checklists) are not yet primary-source-confirmed for this number; note FDAP/>27,000 kg also appears verbatim in LN 42.',
+    'The CAT-aeroplane operations regulation (distinct from LN 47, General Aviation — Aeroplanes). Home of the operational regs the platform cites: FDAP (>27,000 kg), FDR retention, and Human-Factors-in-checklists. FDAP/>27,000 kg is also restated verbatim in LN 42. Reg sub-numbers (56(2), 18(3)(i), 32(3)/38(3)) per CLAUDE.md; Kenya Law full-text not machine-fetchable to re-confirm the sub-numbers.',
 };
 
 export const LN_30_2026: RegulatoryInstrument = {
@@ -35,20 +32,21 @@ export const LN_30_2026: RegulatoryInstrument = {
   shortLabel: 'LN 30/2026',
   longLabel: 'Legal Notice 30 of 2026 — Air Traffic Services',
   effectiveDate: '2026-03-03',
-  primarySourceVerified: false,
-  notes:
-    'Safety Management is confirmed to be a separate instrument (LN 32/2026, present on file); LN 30 is therefore not SMS. The positive subject "Air Traffic Services" is inferred and not yet confirmed against the LN 30 gazette PDF (not in the supplied set).',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/30/eng@2026-03-03',
+  primarySourceVerified: true,
+  notes: 'Safety Management is a separate instrument (LN 32/2026).',
 };
 
 export const LN_31_2026: RegulatoryInstrument = {
   framework: 'KCARs',
   instrumentId: 'LN-31-2026',
   shortLabel: 'LN 31/2026',
-  longLabel: 'Legal Notice 31 of 2026 — Aviation Security',
+  longLabel: 'Legal Notice 31 of 2026 — Security',
   effectiveDate: '2026-03-03',
-  primarySourceVerified: false,
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/31/eng@2026-03-03',
+  primarySourceVerified: true,
   notes:
-    'Personnel Licensing is confirmed to be LN 50/2026 (present on file), not LN 31. The positive subject "Aviation Security" is inferred and not yet confirmed against the LN 31 gazette PDF (not in the supplied set).',
+    'Official short title is "(Security) Regulations" (aviation security / AVSEC). Personnel Licensing is a separate instrument (LN 50/2026).',
 };
 
 export const LN_37_2026: RegulatoryInstrument = {
@@ -56,9 +54,9 @@ export const LN_37_2026: RegulatoryInstrument = {
   instrumentId: 'LN-37-2026',
   shortLabel: 'LN 37/2026',
   longLabel: 'Legal Notice 37 of 2026 — Airworthiness',
-  effectiveDate: '2026-03-03',
-  primarySourceVerified: false,
-  notes: 'Provisional — the LN 37 gazette PDF is not in the supplied set.',
+  effectiveDate: '2026-03-06',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/37/eng@2026-03-06',
+  primarySourceVerified: true,
 };
 
 export const LN_40_2026: RegulatoryInstrument = {
@@ -66,7 +64,8 @@ export const LN_40_2026: RegulatoryInstrument = {
   instrumentId: 'LN-40-2026',
   shortLabel: 'LN 40/2026',
   longLabel: 'Legal Notice 40 of 2026 — Unmanned Aircraft Systems',
-  effectiveDate: '2026-03-03',
+  effectiveDate: '2026-03-06',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/40/eng@2026-03-06',
   primarySourceVerified: true,
 };
 
@@ -74,10 +73,10 @@ export const LN_41_2026: RegulatoryInstrument = {
   framework: 'KCARs',
   instrumentId: 'LN-41-2026',
   shortLabel: 'LN 41/2026',
-  longLabel: 'Legal Notice 41 of 2026 — Aerodromes',
-  effectiveDate: '2026-03-03',
-  primarySourceVerified: false,
-  notes: 'Provisional — the LN 41 gazette PDF is not in the supplied set.',
+  longLabel: 'Legal Notice 41 of 2026 — Certification, Licensing and Registration of Aerodromes',
+  effectiveDate: '2026-03-06',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/41/eng@2026-03-06',
+  primarySourceVerified: true,
 };
 
 /**
@@ -99,6 +98,7 @@ export const LN_42_2026: RegulatoryInstrument = {
   shortLabel: 'LN 42/2026',
   longLabel: 'Legal Notice 42 of 2026 — Air Operator Certification & Administration',
   effectiveDate: '2026-03-06',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/42/eng@2026-03-06',
   primarySourceVerified: true,
   notes:
     'Read in full from the gazette PDF. Third Schedule is the binding OM content list; Sixth Schedule (r. 82) carries the penalties; reg 17(3) is the 30-day submission rule.',
@@ -147,9 +147,9 @@ export const REG_56_2: Citation = {
  * the gazette: an operator of an aeroplane with MTOM in excess of 27 000 kg
  * "shall establish and maintain a flight data analysis programme as part of its
  * safety management system"), under the "Safety Programme and Management System"
- * regulation, sub-paragraph (2). The binding citation for DNCA's AOC holders may
- * therefore be LN 42 rather than (or in addition to) LN 29 — confirm the exact
- * LN 42 regulation number against the gazette before relying on it in an export.
+ * regulation, sub-paragraph (2). LN 29 (CAT — Aeroplanes) is the operational
+ * home of the requirement; LN 42 restates it for AOC holders. Confirm the exact
+ * LN 42 regulation number against the gazette before citing it in an export.
  */
 export const REG_FDAP_LN42: Citation = {
   instrument: LN_42_2026,

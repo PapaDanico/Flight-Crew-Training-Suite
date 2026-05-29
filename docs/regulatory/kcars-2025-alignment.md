@@ -34,15 +34,15 @@ Consumers updated to the new structure: the exports assembler (`@dnca/exports` n
 
 Verified LN→subject against the gazetted titles:
 
-| LN          | Gazetted subject                            | Was in code                               | Action                                                                                       |
-| ----------- | ------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **42/2026** | Air Operator Certification & Administration | ✅ correct                                | confirmed (read in full); effective 6 Mar 2026                                               |
-| **30/2026** | **Air Traffic Services**                    | "Safety Management & ATS"                 | corrected → ATS (Safety Management is **LN 32**)                                             |
-| **31/2026** | Aviation Security                           | "Aviation Security & Personnel Licensing" | dropped Personnel Licensing (that is **LN 50**); ❓ confirm LN 31 = AVSEC against the notice |
-| 29/2026     | Operation of Aircraft — CAT — Aeroplanes    | ✅                                        | unchanged                                                                                    |
-| 37/2026     | Airworthiness                               | ✅                                        | unchanged                                                                                    |
-| 40/2026     | Unmanned Aircraft Systems                   | ✅                                        | unchanged                                                                                    |
-| 41/2026     | Aerodromes                                  | (assumed)                                 | ❓ confirm against the notice                                                                |
+| LN          | Gazetted subject                                          | Was in code                               | Action                                                                                 |
+| ----------- | --------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| **42/2026** | Air Operator Certification & Administration               | ✅ correct                                | confirmed (read in full); effective 6 Mar 2026                                         |
+| **30/2026** | **Air Traffic Services**                                  | "Safety Management & ATS"                 | corrected → ATS (Safety Management is **LN 32**)                                       |
+| **31/2026** | **Security** (AVSEC)                                      | "Aviation Security & Personnel Licensing" | dropped Personnel Licensing (LN 50); confirmed LN 31 = Security via Kenya Law ✅       |
+| 29/2026     | Operation of Aircraft — **CAT** — Aeroplanes              | ✅                                        | confirmed via Kenya Law (distinct from LN 47 = General Aviation); effective 3 Mar 2026 |
+| 37/2026     | Airworthiness                                             | ✅ (date 3 Mar)                           | confirmed via Kenya Law; **date corrected → 6 Mar 2026**                               |
+| 40/2026     | Unmanned Aircraft Systems                                 | ✅ (date 3 Mar)                           | confirmed via Kenya Law; **date corrected → 6 Mar 2026**                               |
+| 41/2026     | **Certification, Licensing & Registration of Aerodromes** | "Aerodromes" (date 3 Mar)                 | confirmed via Kenya Law; title broadened; **date corrected → 6 Mar 2026**              |
 
 Other gazetted notices seen on the drive (for reference): LN 18 Communication Procedures · LN 20 Approved Maintenance Organizations · LN 21 Environmental Protection (Aircraft Noise) · LN 23 Aircraft Nationality & Registration Marks · LN 24 CORSIA · LN 32 Safety Management · LN 47 Operation of Aircraft (General Aviation — Aeroplanes) · LN 50 Personnel Licensing.
 
@@ -56,9 +56,21 @@ Other gazetted notices seen on the drive (for reference): LN 18 Communication Pr
 
 The Flight Data Analysis Programme requirement is cited in code as `REG_56_2 → LN 29`. Reading LN 42 in full shows the same requirement stated **verbatim in LN 42**: an operator of an aeroplane with MTOM **in excess of 27 000 kg** _"shall establish and maintain a flight data analysis programme as part of its safety management system"_ (under the "Safety Programme and Management System" regulation, sub-para (2)). Added `REG_FDAP_LN42` and a note on `REG_56_2`: the binding citation for DNCA's AOC holders may be **LN 42** rather than (or in addition to) LN 29. The exact LN 42 regulation number could not be pinned from the flattened OCR — ❓ confirm the number before relying on it in an export.
 
-### 1.6 Primary-source reconciliation — only LN 40 & 42 of the binding set are on the drive ⚠️ (domain flag)
+### 1.6 Primary-source reconciliation — all seven binding notices now confirmed ✅ (via Kenya Law)
 
-The supplied gazette PDFs (owner `draftkcars@gmail.com`) are **LN 18, 20, 21, 23, 24, 32, 40, 42, 47, 50**. Of the "binding-law" set named in CLAUDE.md — **29, 30, 31, 37, 40, 41, 42** — only **LN 40 (UAS)** and **LN 42 (AOC Admin)** are present and confirmed from primary source. The specific notices for **LN 29, 30, 31, 37, 41 are not in the supplied set**, so their subjects/numbers are now flagged `primarySourceVerified: false` with provisional notes, rather than asserted as fact. This affects inspector-facing citations (the OM Cross-Reference Matrix and AI prompt), so it is surfaced as a domain decision: either the missing notices need to be added to the drive, or the LN numbers in CLAUDE.md need correction against the gazette. **No citation number was silently changed.**
+The supplied gazette PDFs on the drive are **LN 18, 20, 21, 23, 24, 32, 40, 42, 47, 50** — which covers **LN 40 & 42** of the binding set but not LN 29/30/31/37/41. Those five were confirmed instead against the **official Kenya Law record** (the Akoma-Ntoso URN, `new.kenyalaw.org/akn/ke/act/ln/2026/...`), which is authoritative. All seven binding instruments now carry an `authoritativeUrl` and `primarySourceVerified: true`. Confirmed titles/dates:
+
+| LN  | Confirmed official title                                            | Effective      | Was in code                    |
+| --- | ------------------------------------------------------------------- | -------------- | ------------------------------ |
+| 29  | Operation of Aircraft for **Commercial Air Transport — Aeroplanes** | 2026-03-03     | "Operations" (broadened)       |
+| 30  | Air Traffic Services                                                | 2026-03-03     | ✅ correct                     |
+| 31  | **Security**                                                        | 2026-03-03     | "Aviation Security"            |
+| 37  | Airworthiness                                                       | **2026-03-06** | ❌ date was 03-03 → fixed      |
+| 40  | Unmanned Aircraft Systems                                           | **2026-03-06** | ❌ date was 03-03 → fixed      |
+| 41  | **Certification, Licensing and Registration of Aerodromes**         | **2026-03-06** | "Aerodromes" + ❌ date → fixed |
+| 42  | Air Operator Certification & Administration                         | 2026-03-06     | ✅ correct                     |
+
+**Bug fixed:** LN 37/40/41 effective dates were 2026-03-03 in code; the gazette batches them at **2026-03-06**. (LN 29/30/31 are correctly 3 Mar; the later operational set — 44/45/47/48/49/51 — is 25 Mar.) LN 29 is the **CAT-aeroplane** operations regulation, distinct from LN 47 (General Aviation — Aeroplanes), and is the operational home of the FDAP / FDR / HF-checklist regs.
 
 ### 1.4 Personnel Licensing (LN 50) — currency cadences verified ✅
 
@@ -72,13 +84,13 @@ Read LN 50 (Personnel Licensing) in full and checked the FCTS currency catalogue
 
 Only a _stakeholder-comments matrix_ for the **Civil Aviation (Fatigue Management) Regulations** is present (no gazetted notice), consistent with the earlier finding that the FTL/FRMS instrument is not yet in force. The FCTS correctly does not assert FTL limits; no change needed. (Relevant to the sister rostering product, not this one.)
 
-## 3. Remaining ❓ (need the specific gazette PDF, then drop the flags)
+## 3. Remaining ❓ (sub-regulation granularity only)
 
-The blocker for all of these is the same: **the LN 29/30/31/37/41 notices are not in the supplied drive set** (only LN 18/20/21/23/24/32/40/42/47/50 are present). To close them, please add those PDFs to the shared drive or confirm the numbers.
+The instrument-level facts (numbers, titles, dates) are all now confirmed. What remains is **sub-regulation-number** confirmation, blocked because the Kenya Law full text returns HTTP 403 to automated fetch and the LN 29 gazette PDF is not on the drive:
 
-1. **LN 29** subject + the operational regs cited against it (FDAP 56(2) — note it also lives in LN 42; FDR 60-day 18(3)(i); HF-in-checklists 32(3)/38(3)).
-2. **LN 30** (Air Traffic Services?), **LN 31** (Aviation Security?), **LN 37** (Airworthiness?), **LN 41** (Aerodromes?) — confirm titles/numbers.
-3. Exact **LN 42 regulation number** for the FDAP/SMS clause (§1.5).
+1. The exact sub-numbers of the operational citations in **LN 29** — FDAP `56(2)`, FDR retention `18(3)(i)`, HF-in-checklists `32(3)`/`38(3)`. These sub-numbers come from CLAUDE.md (Capt. Ng'ong'a's source); the LN 29 _instrument_ is now confirmed, but the sub-paragraphs were not re-read. To close: add the LN 29 PDF to the drive.
+2. Exact **LN 42 regulation number** for the FDAP/SMS clause (§1.5) — couldn't be pinned from the flattened OCR.
+3. ~~LN 29/30/31/37/41 subjects, numbers, dates~~ ✅ **done** — confirmed via Kenya Law (§1.6).
 4. ~~Sixth Schedule penalty band values (Reg 82)~~ ✅ **done** — see §1.3.
 5. ~~Personnel Licensing (LN 50) currency cadences~~ ✅ **done** — see §1.4.
 

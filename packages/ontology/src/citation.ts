@@ -25,8 +25,9 @@ export interface RegulatoryInstrument {
   authoritativeUrl?: string;
   notes?: string;
   /**
-   * True only when the instrument's subject/number has been checked against the
-   * gazetted primary source (the PDF on file), not inferred. Inspector-facing
+   * True only when the instrument's subject/number/date has been checked against
+   * the authoritative primary source — the gazette PDF on file or the official
+   * Kenya Law record (`authoritativeUrl`) — not inferred. Inspector-facing
    * surfaces may badge a citation whose instrument is not yet verified. Absent
    * is treated as "not verified".
    */
