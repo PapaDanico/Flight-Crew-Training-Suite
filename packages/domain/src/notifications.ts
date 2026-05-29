@@ -214,3 +214,52 @@ export function planNotificationDispatch(
 
   return { dryRun: true, messages, recipientCount: byPilot.size, byChannel };
 }
+
+// ---------------------------------------------------------------------------
+// Per-band de-duplication — so a recipient is alerted once per cascade band,
+// not on every run. A notification is keyed by (pilot, kind, thresholdDays);
+// crossing into a narrower band (90→60→30→14→7→expired) mints a fresh key and
+// therefore a fresh alert, while a re-run inside the same band is suppressed.
+// The ledger of already-sent keys is persisted at the edge (a table written
+// when a real send succeeds); this function stays pure.
+// ---------------------------------------------------------------------------
+
+/** Stable key for one (pilot, kind, cascade-band) alert. */
+export function notificationDedupeKey(n: ExpiryNotification): string {
+  return `${n.pilotId}|${String(n.kind)}|${n.thresholdDays}`;
+}
+
+export interface DedupeResult {
+  /** Notifications not yet sent for their current band, most-urgent first. */
+  readonly fresh: ReadonlyArray<ExpiryNotification>;
+  /** Keys to record once these are dispatched (fresh ∖ alreadySent). */
+  readonly newKeys: ReadonlyArray<string>;
+  /** How many were suppressed because their band was already notified. */
+  readonly suppressedCount: number;
+}
+
+/**
+ * Pure: split a notification set into the alerts that still need sending for
+ * their current cascade band versus those already covered by `alreadySent`.
+ * Pass `result.newKeys` to the ledger only after the dispatch succeeds.
+ */
+export function dedupeNotifications(
+  notifications: ReadonlyArray<ExpiryNotification>,
+  alreadySent: ReadonlySet<string>,
+): DedupeResult {
+  const fresh: ExpiryNotification[] = [];
+  const newKeys: string[] = [];
+  const seen = new Set<string>();
+  let suppressedCount = 0;
+  for (const n of notifications) {
+    const key = notificationDedupeKey(n);
+    if (alreadySent.has(key) || seen.has(key)) {
+      suppressedCount += 1;
+      continue;
+    }
+    seen.add(key);
+    fresh.push(n);
+    newKeys.push(key);
+  }
+  return { fresh, newKeys, suppressedCount };
+}
