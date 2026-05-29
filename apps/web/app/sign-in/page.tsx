@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LogIn, ShieldCheck } from 'lucide-react';
-import { withAuth } from '@workos-inc/authkit-nextjs';
-import { isWorkOSConfigured } from '@/lib/api-config';
+import { getAuthProvider } from '@/lib/auth';
 
 export const metadata: Metadata = {
   title: 'Sign in — DN Consultancy Aviation',
@@ -12,8 +11,9 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function SignInPage() {
-  const configured = isWorkOSConfigured();
-  const user = configured ? (await withAuth()).user : null;
+  const provider = getAuthProvider();
+  const configured = provider.isInteractive;
+  const user = configured ? (await provider.getSession()).user : null;
 
   return (
     <div className="mx-auto max-w-md">
@@ -48,11 +48,7 @@ export default async function SignInPage() {
         ) : user ? (
           <div className="space-y-4">
             <p className="text-sm text-slate-700">
-              You are signed in as{' '}
-              <strong>
-                {`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email}
-              </strong>
-              .
+              You are signed in as <strong>{user.fullName}</strong>.
             </p>
             <Link
               href="/"

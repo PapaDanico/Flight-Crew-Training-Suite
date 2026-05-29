@@ -5,7 +5,7 @@ import { eq, sql } from 'drizzle-orm';
 import { operators } from '@dnca/db';
 import type { Database } from '@dnca/db';
 import type { Role, OperatorId, UserId } from '@dnca/domain';
-import { resolveAuthMode, type Config } from '../config.js';
+import { resolveAuthMode, resolveJwtVerification, type Config } from '../config.js';
 
 /**
  * Authenticated principal attached to every request that passes the auth
@@ -104,16 +104,16 @@ export const authPlugin: FastifyPluginAsync<AuthOptions> = async (app, opts) => 
   // Lazy-construct the JWKS only when production auth actually fires, so
   // dev/test boots don't hit the WorkOS network. createRemoteJWKSet caches
   // keys; jose handles rotation transparently.
+  const jwt = resolveJwtVerification(opts.config);
   let jwksGetter: ReturnType<typeof createRemoteJWKSet> | null = null;
   function getJwks() {
     if (jwksGetter) return jwksGetter;
-    const url = resolveJwksUrl(opts.config);
-    if (!url) {
+    if (!jwt.jwksUrl) {
       throw app.httpErrors.internalServerError(
-        'WorkOS JWKS URL not configured. Set WORKOS_JWKS_URL or WORKOS_CLIENT_ID.',
+        'JWKS URL not configured. Set AUTH_JWKS_URL (any IdP) or WORKOS_JWKS_URL / WORKOS_CLIENT_ID.',
       );
     }
-    jwksGetter = createRemoteJWKSet(new URL(url));
+    jwksGetter = createRemoteJWKSet(new URL(jwt.jwksUrl));
     return jwksGetter;
   }
 
@@ -139,11 +139,11 @@ export const authPlugin: FastifyPluginAsync<AuthOptions> = async (app, opts) => 
     let claims: WorkOSClaims;
     try {
       const { payload } = await jwtVerify(token, getJwks(), {
-        issuer: opts.config.WORKOS_ISSUER,
-        // Audience verification is best-effort — WorkOS access tokens may
-        // omit `aud` depending on AuthKit config. If `aud` is present we
-        // accept any value (we trust the issuer signature); explicit
-        // audience pinning lands once the AuthKit instance is provisioned.
+        issuer: jwt.issuer,
+        // Audience pinned only when AUTH_AUDIENCE is set — some IdPs (incl.
+        // WorkOS AuthKit by default) omit `aud`; we trust the issuer signature
+        // otherwise.
+        ...(jwt.audience ? { audience: jwt.audience } : {}),
       });
       claims = payload as WorkOSClaims;
     } catch (err) {
@@ -151,17 +151,19 @@ export const authPlugin: FastifyPluginAsync<AuthOptions> = async (app, opts) => 
       throw app.httpErrors.unauthorized('Invalid or expired token');
     }
 
-    const orgId = claims.org_id;
-    if (!orgId) {
+    // Org/tenant claim name is configurable (AUTH_ORG_CLAIM) so non-WorkOS
+    // IdPs can carry the operator mapping under their own claim.
+    const orgId = (claims as Record<string, unknown>)[jwt.orgClaim];
+    if (typeof orgId !== 'string' || orgId.length === 0) {
       throw app.httpErrors.forbidden(
         'Token has no organization context; sign in via an organization-scoped session',
       );
     }
 
-    const operatorId = await lookupOperatorByWorkOSOrg(opts.db, orgId);
+    const operatorId = await lookupOperatorByIdpOrg(opts.db, orgId);
     if (!operatorId) {
       throw app.httpErrors.forbidden(
-        `No operator deployment for WorkOS organization ${orgId}. ` +
+        `No operator deployment for IdP organization ${orgId}. ` +
           'Contact platform admin to provision the operator config.',
       );
     }
@@ -177,14 +179,6 @@ export const authPlugin: FastifyPluginAsync<AuthOptions> = async (app, opts) => 
   });
 };
 
-function resolveJwksUrl(config: Config): string | null {
-  if (config.WORKOS_JWKS_URL) return config.WORKOS_JWKS_URL;
-  if (config.WORKOS_CLIENT_ID) {
-    return `${config.WORKOS_ISSUER.replace(/\/+$/, '')}/sso/jwks/${config.WORKOS_CLIENT_ID}`;
-  }
-  return null;
-}
-
 function extractBearerToken(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
   if (typeof header !== 'string') return null;
@@ -192,18 +186,20 @@ function extractBearerToken(request: FastifyRequest): string | null {
   return match?.[1]?.trim() ?? null;
 }
 
-async function lookupOperatorByWorkOSOrg(
-  db: Database,
-  workosOrgId: string,
-): Promise<OperatorId | null> {
+async function lookupOperatorByIdpOrg(db: Database, orgId: string): Promise<OperatorId | null> {
   // operators table is NOT RLS-protected (see infra/migrations/0001); a
-  // direct SELECT works without app.operator_id set. The query matches on
-  // config->>'workosOrganizationId' which is part of the typed
-  // OperatorConfig contract in @dnca/domain.
+  // direct SELECT works without app.operator_id set. Provider-agnostic: match
+  // on a neutral `idpOrganizationId`, falling back to the original
+  // `workosOrganizationId` key so existing WorkOS-mapped operators keep working.
   const rows = await db
     .select({ id: operators.id })
     .from(operators)
-    .where(eq(sql`(${operators.config}->>'workosOrganizationId')`, workosOrgId))
+    .where(
+      eq(
+        sql`COALESCE(${operators.config}->>'idpOrganizationId', ${operators.config}->>'workosOrganizationId')`,
+        orgId,
+      ),
+    )
     .limit(1);
   return (rows[0]?.id as OperatorId) ?? null;
 }

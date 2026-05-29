@@ -30,6 +30,18 @@ const ConfigSchema = z.object({
   // Expected issuer of WorkOS-signed JWTs. Defaults to https://api.workos.com.
   WORKOS_ISSUER: z.string().url().default('https://api.workos.com'),
 
+  // Provider-agnostic OIDC verification overrides. When set, these take
+  // precedence over the WORKOS_* values, so a non-WorkOS IdP (AWS Cognito,
+  // ZITADEL, Keycloak, Supabase Auth, …) needs only env — no code change.
+  //   AUTH_JWKS_URL  — the IdP's JWKS endpoint
+  //   AUTH_ISSUER    — expected `iss`
+  //   AUTH_AUDIENCE  — expected `aud` (pinned only when set)
+  //   AUTH_ORG_CLAIM — JWT claim carrying the org/tenant id (default org_id)
+  AUTH_JWKS_URL: z.string().url().optional(),
+  AUTH_ISSUER: z.string().url().optional(),
+  AUTH_AUDIENCE: z.string().optional(),
+  AUTH_ORG_CLAIM: z.string().default('org_id'),
+
   // Anthropic — optional; routes that need it return 503 if unset.
   ANTHROPIC_API_KEY: z.string().optional(),
 
@@ -62,6 +74,34 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
 
 export function isProduction(c: Config): boolean {
   return c.NODE_ENV === 'production';
+}
+
+/**
+ * Provider-agnostic JWT verification parameters. Generic AUTH_* values win;
+ * otherwise fall back to the WorkOS defaults (incl. deriving the AuthKit JWKS
+ * URL from WORKOS_CLIENT_ID). `jwksUrl` is null when nothing is configured —
+ * the auth plugin treats that as a misconfiguration in production.
+ */
+export interface JwtVerification {
+  jwksUrl: string | null;
+  issuer: string;
+  audience: string | null;
+  orgClaim: string;
+}
+
+export function resolveJwtVerification(c: Config): JwtVerification {
+  const jwksUrl =
+    c.AUTH_JWKS_URL ??
+    c.WORKOS_JWKS_URL ??
+    (c.WORKOS_CLIENT_ID
+      ? `${c.WORKOS_ISSUER.replace(/\/+$/, '')}/sso/jwks/${c.WORKOS_CLIENT_ID}`
+      : null);
+  return {
+    jwksUrl,
+    issuer: c.AUTH_ISSUER ?? c.WORKOS_ISSUER,
+    audience: c.AUTH_AUDIENCE ?? null,
+    orgClaim: c.AUTH_ORG_CLAIM,
+  };
 }
 
 export type AuthMode = 'workos' | 'demo';

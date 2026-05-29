@@ -18,7 +18,6 @@
  * shared @dnca/domain types catches it.
  */
 
-import { withAuth } from '@workos-inc/authkit-nextjs';
 import type {
   CurrencyKind,
   IsoDate,
@@ -27,7 +26,8 @@ import type {
   PilotRole,
   TrainingPhase,
 } from '@dnca/domain';
-import { getApiBaseUrl, getDemoApiConfig, isWorkOSConfigured } from './api-config.js';
+import { getApiBaseUrl, getDemoApiConfig } from './api-config.js';
+import { getAuthProvider } from './auth/index.js';
 
 export type ApiPilot = Omit<Pilot, 'createdAt' | 'updatedAt'>;
 
@@ -58,26 +58,19 @@ export class ApiError extends Error {
 }
 
 async function buildAuthHeader(): Promise<Record<string, string>> {
-  // Prefer WorkOS access token when a session is present. withAuth() returns
-  // { user: null } when no session — we then fall back to the demo header
-  // if configured. This keeps the auth boundary in one place.
-  if (isWorkOSConfigured()) {
-    try {
-      const session = await withAuth();
-      if (session.user && session.accessToken) {
-        return { authorization: `Bearer ${session.accessToken}` };
-      }
-    } catch {
-      // withAuth throws when called outside a request context (e.g. during
-      // Next's static optimization probe); fall through to demo / fixtures.
-    }
+  // Prefer the provider's access token when a session is present; otherwise
+  // fall back to the demo operator header. Provider-agnostic: the seam in
+  // ./auth returns a Bearer token regardless of the underlying IdP.
+  const { accessToken } = await getAuthProvider().getSession();
+  if (accessToken) {
+    return { authorization: `Bearer ${accessToken}` };
   }
   const demo = getDemoApiConfig();
   if (demo) {
     return { 'x-demo-operator-id': demo.demoOperatorId };
   }
   throw new ApiError(
-    'API not authenticated. Sign in via WorkOS or set DEMO_OPERATOR_ID for dev mode.',
+    'API not authenticated. Sign in, or set DEMO_OPERATOR_ID for dev mode.',
     401,
     '',
   );

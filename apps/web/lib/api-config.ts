@@ -42,16 +42,6 @@ export function isApiConfigured(): boolean {
   return getApiBaseUrl() !== null;
 }
 
-/**
- * Heuristic: WorkOS-mode is available when the four required vars are set.
- * The actual session check (whether THIS request has a signed-in user) is
- * a runtime concern handled by withAuth() in api-client.ts.
- */
-export function isWorkOSConfigured(): boolean {
-  return Boolean(
-    process.env['WORKOS_CLIENT_ID'] &&
-    process.env['WORKOS_API_KEY'] &&
-    process.env['WORKOS_COOKIE_PASSWORD'] &&
-    process.env['NEXT_PUBLIC_WORKOS_REDIRECT_URI'],
-  );
-}
+// Provider selection moved to lib/auth/select.ts (selectAuthProviderKind) so
+// the app has a single, provider-agnostic source of truth for which IdP is
+// active. This module now only configures the web → API transport.
