@@ -43,6 +43,7 @@ const NAV: ReadonlyArray<NavItem> = [
     label: 'Compliance & exports',
     children: [
       { href: '/compliance', label: 'Compliance overview' },
+      { href: '/operators', label: 'Operator config' },
       { href: '/exports/crew-currency-snapshot', label: 'Crew Currency Snapshot' },
       { href: '/exports/pilot-training-file', label: 'Pilot Training File' },
       { href: '/exports/om-cross-reference-matrix', label: 'OM Cross-Reference Matrix' },
