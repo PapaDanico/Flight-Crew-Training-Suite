@@ -44,9 +44,12 @@ const NAV: ReadonlyArray<NavItem> = [
     children: [
       { href: '/compliance', label: 'Compliance overview' },
       { href: '/operators', label: 'Operator config' },
+      { href: '/exports', label: 'All exports' },
       { href: '/exports/crew-currency-snapshot', label: 'Crew Currency Snapshot' },
       { href: '/exports/pilot-training-file', label: 'Pilot Training File' },
       { href: '/exports/om-cross-reference-matrix', label: 'OM Cross-Reference Matrix' },
+      { href: '/exports/kcaa-transmittal', label: 'KCAA Transmittal (Reg 17(3))' },
+      { href: '/exports/compliance-evidence-pack', label: 'Compliance Evidence Pack' },
     ],
   },
 ];
