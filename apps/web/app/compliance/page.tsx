@@ -87,6 +87,14 @@ export default function CompliancePage() {
             >
               OM Matrix — I-Fly Demo
             </a>
+            <a
+              href="/exports/kcaa-transmittal"
+              target="_blank"
+              rel="noopener"
+              className="rounded border border-amber-400 bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-900 hover:bg-amber-100"
+            >
+              KCAA Transmittal (Reg 17(3))
+            </a>
           </div>
         </div>
 

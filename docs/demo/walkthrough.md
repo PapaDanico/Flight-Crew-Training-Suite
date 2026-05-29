@@ -37,7 +37,7 @@ Click on **Capt. Charlie Three** (the I-Fly pilot with the expired medical).
 Mention what's not yet here:
 
 - "Assessment history slot is reserved — Sprint 4 wires it up when we have AssessmentResult persistence."
-- "Pilot Training File PDF — Sprint 3 deliverable. Today the inspector can still download the operator snapshot."
+- "Pilot Training File PDF is live — per-pilot complete history, alongside the operator-wide snapshot, the OM Cross-Reference Matrix, and the KCAA transmittal letter."
 
 ### 4. KCAA snapshot export — 60 s
 
