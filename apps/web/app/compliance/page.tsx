@@ -115,10 +115,11 @@ export default function CompliancePage() {
           KCARs 2025 source provenance
         </h2>
         <p className="mb-3 max-w-3xl text-xs text-slate-600">
-          Verification state of each cited Legal Notice against the gazetted PDF on file. Citations
-          to a <span className="font-semibold text-amber-800">provisional</span> instrument are
-          badged throughout the platform — their subject/number is inferred and awaits the specific
-          gazette notice.
+          Verification state of each cited Legal Notice against the authoritative primary source —
+          the gazette PDF on file or the official Kenya Law record. A{' '}
+          <span className="font-semibold text-emerald-800">verified</span> row links to its Kenya
+          Law URN; a <span className="font-semibold text-amber-800">provisional</span> instrument
+          (none at present) is badged wherever it is cited until its source is confirmed.
         </p>
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
           <table className="w-full text-sm">
@@ -126,7 +127,23 @@ export default function CompliancePage() {
               {KCARS_2025_INSTRUMENTS.map((i) => (
                 <tr key={i.instrumentId} className="hover:bg-slate-50">
                   <td className="w-28 px-3 py-2 align-top font-medium text-navy-900">
-                    {i.shortLabel}
+                    {i.authoritativeUrl ? (
+                      <a
+                        href={i.authoritativeUrl}
+                        target="_blank"
+                        rel="noopener"
+                        className="text-navy-700 underline decoration-dotted hover:text-navy-900"
+                      >
+                        {i.shortLabel}
+                      </a>
+                    ) : (
+                      i.shortLabel
+                    )}
+                    {i.effectiveDate ? (
+                      <div className="text-[10px] font-normal text-slate-400">
+                        eff. {i.effectiveDate}
+                      </div>
+                    ) : null}
                   </td>
                   <td className="px-3 py-2 align-top">
                     {i.primarySourceVerified ? (
@@ -168,7 +185,18 @@ function CitationCell({ citations }: { citations: ReadonlyArray<Citation> }) {
       <div className="space-y-1">
         {citations.map((c, idx) => (
           <div key={idx} className="text-xs">
-            <span className="font-medium">{c.instrument.shortLabel}</span>
+            {c.instrument.authoritativeUrl ? (
+              <a
+                href={c.instrument.authoritativeUrl}
+                target="_blank"
+                rel="noopener"
+                className="font-medium text-navy-700 underline decoration-dotted hover:text-navy-900"
+              >
+                {c.instrument.shortLabel}
+              </a>
+            ) : (
+              <span className="font-medium">{c.instrument.shortLabel}</span>
+            )}
             {c.section ? <span> {c.section}</span> : null}
             {isProvisional(c) ? (
               <span
