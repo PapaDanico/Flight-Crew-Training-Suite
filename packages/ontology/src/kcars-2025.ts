@@ -1,8 +1,20 @@
 import type { Citation, RegulatoryInstrument } from './citation.js';
 
 /**
- * KCARs 2025 — Kenya Civil Aviation Regulations, gazetted as Legal Notices
- * 29, 30, 31, 37, 40, 41, 42 of 2026. The 2018 regulations are repealed.
+ * KCARs 2025 — Kenya Civil Aviation Regulations, gazetted as Legal Notices of
+ * 2026. The 2018 regulations are repealed.
+ *
+ * Verification state (`primarySourceVerified`) records whether the instrument's
+ * subject/number was checked against the gazetted PDF on file. Of the
+ * "binding-law" set named in CLAUDE.md (29/30/31/37/40/41/42), only **LN 40 and
+ * LN 42** are present in the supplied gazette PDFs and confirmed from primary
+ * source. The gazette set on the drive also includes LN 18 (Communication
+ * Procedures), 20 (Approved Maintenance Organizations), 21 (Environmental
+ * Protection — Aircraft Noise), 23 (Nationality & Registration Marks),
+ * 24 (CORSIA), 32 (Safety Management), 47 (Operation of Aircraft — General
+ * Aviation — Aeroplanes) and 50 (Personnel Licensing). The specific notices for
+ * LN 29/30/31/37/41 are **not** in the supplied set, so their subjects/numbers
+ * remain provisional pending those PDFs — see kcars-2025-alignment.md §3.
  *
  * Effective dates per CLAUDE.md / README.
  */
@@ -12,6 +24,9 @@ export const LN_29_2026: RegulatoryInstrument = {
   shortLabel: 'LN 29/2026',
   longLabel: 'Legal Notice 29 of 2026 — Operations (Aeroplanes)',
   effectiveDate: '2026-03-03',
+  primarySourceVerified: false,
+  notes:
+    'Provisional — the LN 29 gazette PDF is not in the supplied set. Operational regs cited against it (FDAP, FDR retention, HF in checklists) are not yet primary-source-confirmed for this number; note FDAP/>27,000 kg also appears verbatim in LN 42.',
 };
 
 export const LN_30_2026: RegulatoryInstrument = {
@@ -20,8 +35,9 @@ export const LN_30_2026: RegulatoryInstrument = {
   shortLabel: 'LN 30/2026',
   longLabel: 'Legal Notice 30 of 2026 — Air Traffic Services',
   effectiveDate: '2026-03-03',
+  primarySourceVerified: false,
   notes:
-    'Per the gazetted notices, Safety Management is a separate instrument (LN 32/2026); LN 30 is Air Traffic Services.',
+    'Safety Management is confirmed to be a separate instrument (LN 32/2026, present on file); LN 30 is therefore not SMS. The positive subject "Air Traffic Services" is inferred and not yet confirmed against the LN 30 gazette PDF (not in the supplied set).',
 };
 
 export const LN_31_2026: RegulatoryInstrument = {
@@ -30,8 +46,9 @@ export const LN_31_2026: RegulatoryInstrument = {
   shortLabel: 'LN 31/2026',
   longLabel: 'Legal Notice 31 of 2026 — Aviation Security',
   effectiveDate: '2026-03-03',
+  primarySourceVerified: false,
   notes:
-    'Personnel Licensing is a separate instrument (LN 50/2026), not LN 31. The LN 31 subject (Aviation Security) should be confirmed against the gazetted notice.',
+    'Personnel Licensing is confirmed to be LN 50/2026 (present on file), not LN 31. The positive subject "Aviation Security" is inferred and not yet confirmed against the LN 31 gazette PDF (not in the supplied set).',
 };
 
 export const LN_37_2026: RegulatoryInstrument = {
@@ -40,6 +57,8 @@ export const LN_37_2026: RegulatoryInstrument = {
   shortLabel: 'LN 37/2026',
   longLabel: 'Legal Notice 37 of 2026 — Airworthiness',
   effectiveDate: '2026-03-03',
+  primarySourceVerified: false,
+  notes: 'Provisional — the LN 37 gazette PDF is not in the supplied set.',
 };
 
 export const LN_40_2026: RegulatoryInstrument = {
@@ -48,6 +67,7 @@ export const LN_40_2026: RegulatoryInstrument = {
   shortLabel: 'LN 40/2026',
   longLabel: 'Legal Notice 40 of 2026 — Unmanned Aircraft Systems',
   effectiveDate: '2026-03-03',
+  primarySourceVerified: true,
 };
 
 export const LN_41_2026: RegulatoryInstrument = {
@@ -56,6 +76,8 @@ export const LN_41_2026: RegulatoryInstrument = {
   shortLabel: 'LN 41/2026',
   longLabel: 'Legal Notice 41 of 2026 — Aerodromes',
   effectiveDate: '2026-03-03',
+  primarySourceVerified: false,
+  notes: 'Provisional — the LN 41 gazette PDF is not in the supplied set.',
 };
 
 /**
@@ -77,7 +99,9 @@ export const LN_42_2026: RegulatoryInstrument = {
   shortLabel: 'LN 42/2026',
   longLabel: 'Legal Notice 42 of 2026 — Air Operator Certification & Administration',
   effectiveDate: '2026-03-06',
-  notes: 'Third Schedule is the binding OM content list.',
+  primarySourceVerified: true,
+  notes:
+    'Read in full from the gazette PDF. Third Schedule is the binding OM content list; Sixth Schedule (r. 82) carries the penalties; reg 17(3) is the 30-day submission rule.',
 };
 
 export const KCARS_2025_INSTRUMENTS: ReadonlyArray<RegulatoryInstrument> = [
@@ -118,6 +142,21 @@ export const REG_56_2: Citation = {
   subject: 'FDAP mandatory for aircraft > 27,000 kg MTOW',
 };
 
+/**
+ * The FDAP / >27,000 kg requirement is also stated verbatim in LN 42 (read from
+ * the gazette: an operator of an aeroplane with MTOM in excess of 27 000 kg
+ * "shall establish and maintain a flight data analysis programme as part of its
+ * safety management system"), under the "Safety Programme and Management System"
+ * regulation, sub-paragraph (2). The binding citation for DNCA's AOC holders may
+ * therefore be LN 42 rather than (or in addition to) LN 29 — confirm the exact
+ * LN 42 regulation number against the gazette before relying on it in an export.
+ */
+export const REG_FDAP_LN42: Citation = {
+  instrument: LN_42_2026,
+  subject:
+    'FDAP required as part of the SMS for aeroplanes with MTOM > 27,000 kg (Safety Programme and Management System reg, sub-para (2))',
+};
+
 export const REG_18_3_I: Citation = {
   instrument: LN_29_2026,
   section: '18(3)(i)',
@@ -138,13 +177,19 @@ export const REG_84: Citation = {
 export const REG_84_UNEXTENDED_DEADLINE = '2027-03-06' as const;
 
 /**
- * Sixth Schedule penalty bands.
+ * Sixth Schedule penalty bands — verified verbatim against the LN 42 gazette
+ * (r. 82): a contravention of an "A" provision is liable to a fine not
+ * exceeding one million shillings per offence and/or imprisonment not exceeding
+ * one year; a "B" provision, a fine not exceeding two million shillings per
+ * offence and/or imprisonment not exceeding three years.
  */
 export const SIXTH_SCHEDULE_PENALTIES = {
+  reg: '82',
+  primarySourceVerified: true,
   aClass: { maxFineKsh: 1_000_000, maxImprisonmentYears: 1 },
   bClass: { maxFineKsh: 2_000_000, maxImprisonmentYears: 3 },
   notes:
-    'Operational consequence beyond fines: AOC suspension/revocation exposure, individual licence action.',
+    'Verified against LN 42 r. 82 / Sixth Schedule. Operational consequence beyond fines: AOC suspension/revocation exposure, individual licence action.',
 } as const;
 
 // ----------------------------------------------------------------------------

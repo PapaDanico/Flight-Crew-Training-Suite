@@ -24,6 +24,13 @@ export interface RegulatoryInstrument {
   supersededBy?: string;
   authoritativeUrl?: string;
   notes?: string;
+  /**
+   * True only when the instrument's subject/number has been checked against the
+   * gazetted primary source (the PDF on file), not inferred. Inspector-facing
+   * surfaces may badge a citation whose instrument is not yet verified. Absent
+   * is treated as "not verified".
+   */
+  primarySourceVerified?: boolean;
 }
 
 /**

@@ -50,7 +50,15 @@ Other gazetted notices seen on the drive (for reference): LN 18 Communication Pr
 
 - **Reg 17(3)** (LN 42): _"An Operator shall submit the proposed policy or procedure manual to the Authority at least thirty days prior to the date of intended implementation."_ — matches the platform's `REG_17_3` and the 30-day submission-deadline logic exactly.
 - **Reg 84** = "Saving and Transitional Provision" (LN 42, Part XI; Reg 83 revokes L.N. 92/2018). Confirms the Reg 84 transition anchor; effective date 6 Mar 2026 ⇒ unextended deadline 2027-03-06 (already in code).
-- **Reg 82** = Penalties (Sixth Schedule). Penalty band values not re-verified this pass — left as-is. ❓
+- **Reg 82 / Sixth Schedule penalties — verified verbatim ✅** (this pass). From the LN 42 gazette: a contravention of an **"A" provision** is liable to a fine **not exceeding one million shillings** per offence and/or imprisonment **not exceeding one year**; a **"B" provision**, a fine **not exceeding two million shillings** per offence and/or imprisonment **not exceeding three years**. The hardcoded `SIXTH_SCHEDULE_PENALTIES` values (A: 1,000,000 / 1 yr · B: 2,000,000 / 3 yr) match exactly — marked `primarySourceVerified: true` and locked by `instruments.test.ts`.
+
+### 1.5 FDAP / >27,000 kg — also stated in LN 42 ✅ (this pass)
+
+The Flight Data Analysis Programme requirement is cited in code as `REG_56_2 → LN 29`. Reading LN 42 in full shows the same requirement stated **verbatim in LN 42**: an operator of an aeroplane with MTOM **in excess of 27 000 kg** _"shall establish and maintain a flight data analysis programme as part of its safety management system"_ (under the "Safety Programme and Management System" regulation, sub-para (2)). Added `REG_FDAP_LN42` and a note on `REG_56_2`: the binding citation for DNCA's AOC holders may be **LN 42** rather than (or in addition to) LN 29. The exact LN 42 regulation number could not be pinned from the flattened OCR — ❓ confirm the number before relying on it in an export.
+
+### 1.6 Primary-source reconciliation — only LN 40 & 42 of the binding set are on the drive ⚠️ (domain flag)
+
+The supplied gazette PDFs (owner `draftkcars@gmail.com`) are **LN 18, 20, 21, 23, 24, 32, 40, 42, 47, 50**. Of the "binding-law" set named in CLAUDE.md — **29, 30, 31, 37, 40, 41, 42** — only **LN 40 (UAS)** and **LN 42 (AOC Admin)** are present and confirmed from primary source. The specific notices for **LN 29, 30, 31, 37, 41 are not in the supplied set**, so their subjects/numbers are now flagged `primarySourceVerified: false` with provisional notes, rather than asserted as fact. This affects inspector-facing citations (the OM Cross-Reference Matrix and AI prompt), so it is surfaced as a domain decision: either the missing notices need to be added to the drive, or the LN numbers in CLAUDE.md need correction against the gazette. **No citation number was silently changed.**
 
 ### 1.4 Personnel Licensing (LN 50) — currency cadences verified ✅
 
@@ -64,11 +72,15 @@ Read LN 50 (Personnel Licensing) in full and checked the FCTS currency catalogue
 
 Only a _stakeholder-comments matrix_ for the **Civil Aviation (Fatigue Management) Regulations** is present (no gazetted notice), consistent with the earlier finding that the FTL/FRMS instrument is not yet in force. The FCTS correctly does not assert FTL limits; no change needed. (Relevant to the sister rostering product, not this one.)
 
-## 3. Remaining ❓ (confirm against the specific notice, then drop the flags)
+## 3. Remaining ❓ (need the specific gazette PDF, then drop the flags)
 
-1. LN 31 subject (Aviation Security?) and LN 41 (Aerodromes?) — confirm titles.
-2. Sixth Schedule penalty band values (Reg 82).
-3. ~~Personnel Licensing (LN 50) currency cadences~~ ✅ **done** — see §1.4.
+The blocker for all of these is the same: **the LN 29/30/31/37/41 notices are not in the supplied drive set** (only LN 18/20/21/23/24/32/40/42/47/50 are present). To close them, please add those PDFs to the shared drive or confirm the numbers.
+
+1. **LN 29** subject + the operational regs cited against it (FDAP 56(2) — note it also lives in LN 42; FDR 60-day 18(3)(i); HF-in-checklists 32(3)/38(3)).
+2. **LN 30** (Air Traffic Services?), **LN 31** (Aviation Security?), **LN 37** (Airworthiness?), **LN 41** (Aerodromes?) — confirm titles/numbers.
+3. Exact **LN 42 regulation number** for the FDAP/SMS clause (§1.5).
+4. ~~Sixth Schedule penalty band values (Reg 82)~~ ✅ **done** — see §1.3.
+5. ~~Personnel Licensing (LN 50) currency cadences~~ ✅ **done** — see §1.4.
 
 ## Source files (shared drive)
 
