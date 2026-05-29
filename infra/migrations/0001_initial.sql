@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Migration 0001: initial schema, RLS policies, append-only audit log.
 --
--- Bootstrap migration for the Fokker 70/100 Flight Crew Training Suite.
+-- Bootstrap migration for the DNCA Flight Crew Training Suite.
 -- Implements:
 --   - Postgres enum types matching @dnca/domain enums
 --   - All tenant-scoped tables with operator_id FK

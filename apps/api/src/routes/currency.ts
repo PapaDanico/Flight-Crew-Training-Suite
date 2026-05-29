@@ -4,6 +4,7 @@ import { currencyRecords, pilots, sessions } from '@dnca/db';
 import { CURRENCY_KIND } from '@dnca/domain';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { ZodTypeProvider } from '../plugins/zod-validator.js';
+import { requireRoleGroup } from '../lib/rbac.js';
 
 /**
  * Currency record routes. Implements regulated-records discipline:
@@ -84,6 +85,7 @@ export const currencyRoutes: FastifyPluginAsync = async (rawApp) => {
     },
     async (request, reply) => {
       const operatorId = requireOperatorScope(request);
+      requireRoleGroup(request.principal, 'CURRENCY_ISSUE');
       const issuerUserId = request.principal.userId;
       const { pilotId } = request.params;
       const body = request.body;

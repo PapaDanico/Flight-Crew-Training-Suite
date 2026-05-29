@@ -4,6 +4,7 @@ import { pilots } from '@dnca/db';
 import { PILOT_ROLE, TRAINING_PHASE } from '@dnca/domain';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { ZodTypeProvider } from '../plugins/zod-validator.js';
+import { requireRoleGroup } from '../lib/rbac.js';
 
 /**
  * Pilot routes. Establishes the per-route transaction pattern that
@@ -105,6 +106,7 @@ export const pilotRoutes: FastifyPluginAsync = async (rawApp) => {
     },
     async (request, reply) => {
       const operatorId = requireOperatorScope(request);
+      requireRoleGroup(request.principal, 'PILOT_WRITE');
       const body = request.body;
 
       const created = await app.withOperatorScope(operatorId, async (db) => {
@@ -144,6 +146,7 @@ export const pilotRoutes: FastifyPluginAsync = async (rawApp) => {
     { schema: { params: PilotParams, body: UpdatePilotBody, response: { 200: PilotResponse } } },
     async (request) => {
       const operatorId = requireOperatorScope(request);
+      requireRoleGroup(request.principal, 'PILOT_WRITE');
       const { id } = request.params;
       const patch = request.body;
 
@@ -188,6 +191,7 @@ export const pilotRoutes: FastifyPluginAsync = async (rawApp) => {
     },
     async (request) => {
       const operatorId = requireOperatorScope(request);
+      requireRoleGroup(request.principal, 'PILOT_DELETE');
       const { id } = request.params;
       const { reason } = request.body;
 

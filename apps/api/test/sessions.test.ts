@@ -317,3 +317,128 @@ describe('RLS cross-tenant isolation', { skip }, () => {
     assert.equal(res.statusCode, 404);
   });
 });
+
+describe('Session void', { skip }, () => {
+  it('TRE cannot void a session — only HoT / AM can', async () => {
+    const sess = await app!.inject({
+      method: 'POST',
+      url: `/pilots/${pilotId}/sessions`,
+      headers: {
+        'x-demo-operator-id': JAK_OPERATOR_ID,
+        'x-demo-role': 'TRE',
+        'content-type': 'application/json',
+      },
+      payload: { kind: 'OPC', venue: 'FFS', startedAt: new Date().toISOString() },
+    });
+    const sessionId = sess.json().id;
+
+    const res = await app!.inject({
+      method: 'POST',
+      url: `/sessions/${sessionId}/void`,
+      headers: {
+        'x-demo-operator-id': JAK_OPERATOR_ID,
+        'x-demo-role': 'TRE',
+        'content-type': 'application/json',
+      },
+      payload: { reason: 'wrong pilot logged — TRE attempt' },
+    });
+    assert.equal(res.statusCode, 403);
+  });
+
+  it('HoT CAN void a DRAFT session', async () => {
+    const sess = await app!.inject({
+      method: 'POST',
+      url: `/pilots/${pilotId}/sessions`,
+      headers: {
+        'x-demo-operator-id': JAK_OPERATOR_ID,
+        'x-demo-role': 'TRE',
+        'content-type': 'application/json',
+      },
+      payload: { kind: 'OPC', venue: 'FFS', startedAt: new Date().toISOString() },
+    });
+    const sessionId = sess.json().id;
+
+    const voidRes = await app!.inject({
+      method: 'POST',
+      url: `/sessions/${sessionId}/void`,
+      headers: {
+        'x-demo-operator-id': JAK_OPERATOR_ID,
+        'x-demo-role': 'HEAD_OF_TRAINING',
+        'content-type': 'application/json',
+      },
+      payload: { reason: 'wrong pilot logged; logging a corrective session next' },
+    });
+    assert.equal(voidRes.statusCode, 200);
+
+    // Voided session reads back with status = VOIDED
+    const read = await app!.inject({
+      method: 'GET',
+      url: `/sessions/${sessionId}`,
+      headers: { 'x-demo-operator-id': JAK_OPERATOR_ID },
+    });
+    assert.equal(read.json().status, 'VOIDED');
+  });
+
+  it('Rejects a second void on an already-VOIDED session', async () => {
+    const sess = await app!.inject({
+      method: 'POST',
+      url: `/pilots/${pilotId}/sessions`,
+      headers: {
+        'x-demo-operator-id': JAK_OPERATOR_ID,
+        'x-demo-role': 'TRE',
+        'content-type': 'application/json',
+      },
+      payload: { kind: 'OPC', venue: 'FFS', startedAt: new Date().toISOString() },
+    });
+    const sessionId = sess.json().id;
+
+    await app!.inject({
+      method: 'POST',
+      url: `/sessions/${sessionId}/void`,
+      headers: {
+        'x-demo-operator-id': JAK_OPERATOR_ID,
+        'x-demo-role': 'HEAD_OF_TRAINING',
+        'content-type': 'application/json',
+      },
+      payload: { reason: 'first void; will retry below' },
+    });
+
+    const second = await app!.inject({
+      method: 'POST',
+      url: `/sessions/${sessionId}/void`,
+      headers: {
+        'x-demo-operator-id': JAK_OPERATOR_ID,
+        'x-demo-role': 'HEAD_OF_TRAINING',
+        'content-type': 'application/json',
+      },
+      payload: { reason: 'second void attempt; should 409' },
+    });
+    assert.equal(second.statusCode, 409);
+  });
+
+  it('Rejects voids without a sufficient reason', async () => {
+    const sess = await app!.inject({
+      method: 'POST',
+      url: `/pilots/${pilotId}/sessions`,
+      headers: {
+        'x-demo-operator-id': JAK_OPERATOR_ID,
+        'x-demo-role': 'TRE',
+        'content-type': 'application/json',
+      },
+      payload: { kind: 'OPC', venue: 'FFS', startedAt: new Date().toISOString() },
+    });
+    const sessionId = sess.json().id;
+
+    const res = await app!.inject({
+      method: 'POST',
+      url: `/sessions/${sessionId}/void`,
+      headers: {
+        'x-demo-operator-id': JAK_OPERATOR_ID,
+        'x-demo-role': 'HEAD_OF_TRAINING',
+        'content-type': 'application/json',
+      },
+      payload: { reason: 'oops' },
+    });
+    assert.equal(res.statusCode, 400);
+  });
+});

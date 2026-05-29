@@ -47,3 +47,8 @@ output "ecs_web_service_name" {
   description = "ECS service name for web."
   value       = aws_ecs_service.web.name
 }
+
+output "rds_security_group_id" {
+  description = "RDS security group id. Used by the incident-response runbook for emergency one-off DB access."
+  value       = aws_security_group.rds.id
+}

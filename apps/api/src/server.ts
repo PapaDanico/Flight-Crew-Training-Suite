@@ -32,6 +32,8 @@ export async function buildApp() {
 
   // Fail closed: refuse to boot in an auth configuration that would fail open
   // (e.g. demo auth in production, or WorkOS creds present but demo selected).
+  // This supersedes the earlier NODE_ENV-only guard from PR #4 — assertAuthModeSafe
+  // covers that case (WorkOS creds present but mode would be demo) and more.
   const authMode = assertAuthModeSafe(config);
 
   const loggerConfig = isProduction(config)

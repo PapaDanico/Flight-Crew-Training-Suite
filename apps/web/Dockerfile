@@ -29,6 +29,12 @@ FROM node:22-alpine AS builder
 WORKDIR /repo
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Next.js SWC native binary needs libc6-compat on alpine (musl) — without
+# it `next build` dies loading the SWC binary, which is invisible on a
+# glibc dev machine. Must be on the BUILDER stage (where next build runs),
+# not just deps.
+RUN apk add --no-cache libc6-compat
+
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/apps/web/node_modules ./apps/web/node_modules
 COPY pnpm-workspace.yaml package.json tsconfig.base.json ./
@@ -51,14 +57,19 @@ RUN corepack enable && corepack prepare pnpm@9.0.0 --activate && pnpm exec next 
 FROM node:22-alpine AS runtime
 WORKDIR /app
 
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini libc6-compat
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# next standalone output ships a self-contained server.js + minimal
-# node_modules under .next/standalone; static assets ship separately.
+# Standalone output (next.config.js `output: 'standalone'` +
+# `outputFileTracingRoot: <repo-root>`) produces:
+#   .next/standalone/apps/web/server.js   <- the entry point
+#   .next/standalone/apps/web/.next/      <- server-side bundles
+#   .next/standalone/packages/*/          <- traced workspace packages
+#   .next/standalone/node_modules/         <- traced external deps
+# Static assets and public/ are not in standalone; copy them separately.
 COPY --from=builder /repo/apps/web/.next/standalone ./
 COPY --from=builder /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder /repo/apps/web/public ./apps/web/public

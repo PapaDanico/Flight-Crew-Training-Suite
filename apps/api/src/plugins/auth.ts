@@ -208,20 +208,43 @@ async function lookupOperatorByWorkOSOrg(
   return (rows[0]?.id as OperatorId) ?? null;
 }
 
+const DEMO_ROLES = new Set([
+  'PLATFORM_ADMIN',
+  'ACCOUNTABLE_MANAGER',
+  'HEAD_OF_TRAINING',
+  'CHIEF_PILOT',
+  'SAFETY_MANAGER',
+  'QUALITY_MANAGER',
+  'TRI',
+  'TRE',
+  'LCE',
+  'LTC',
+  'PILOT',
+]);
+
 function synthesizeDemoPrincipal(request: FastifyRequest): Principal {
-  // Demo path: every request is a platform-admin viewing the seeded JAK
-  // operator. Used only when NODE_ENV !== 'production'.
+  // Demo path: every request is a platform-admin scoped to JAK by default.
+  // Tests + dev tools override the operator via x-demo-operator-id and the
+  // role via x-demo-role so RBAC behaviour can be exercised without a
+  // WorkOS round trip. Used only when NODE_ENV !== 'production'.
   const operatorIdHeader = request.headers['x-demo-operator-id'];
   const operatorId =
     typeof operatorIdHeader === 'string' && /^[0-9a-f-]{36}$/i.test(operatorIdHeader)
       ? (operatorIdHeader as OperatorId)
       : ('11111111-1111-1111-1111-111111111111' as OperatorId);
+
+  const roleHeader = request.headers['x-demo-role'];
+  const role =
+    typeof roleHeader === 'string' && DEMO_ROLES.has(roleHeader)
+      ? (roleHeader as Role)
+      : 'PLATFORM_ADMIN';
+
   return {
     userId: '99999999-9999-9999-9999-000000000001' as UserId,
     email: 'demo@dnca.aero',
-    fullName: 'Demo Platform Admin',
+    fullName: `Demo ${role}`,
     operatorId,
-    roles: ['PLATFORM_ADMIN'] as ReadonlyArray<Role>,
+    roles: [role] as ReadonlyArray<Role>,
     source: 'demo',
   };
 }
