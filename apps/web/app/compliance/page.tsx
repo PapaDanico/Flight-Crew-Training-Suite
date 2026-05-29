@@ -1,5 +1,6 @@
 import {
   DOMAIN_CROSS_REFERENCE,
+  KCARS_2025_INSTRUMENTS,
   SIXTH_SCHEDULE_PENALTIES,
   THIRD_SCHEDULE,
   formatCitation,
@@ -108,8 +109,57 @@ export default function CompliancePage() {
           </p>
         </div>
       </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">
+          KCARs 2025 source provenance
+        </h2>
+        <p className="mb-3 max-w-3xl text-xs text-slate-600">
+          Verification state of each cited Legal Notice against the gazetted PDF on file. Citations
+          to a <span className="font-semibold text-amber-800">provisional</span> instrument are
+          badged throughout the platform — their subject/number is inferred and awaits the specific
+          gazette notice.
+        </p>
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-slate-200">
+              {KCARS_2025_INSTRUMENTS.map((i) => (
+                <tr key={i.instrumentId} className="hover:bg-slate-50">
+                  <td className="w-28 px-3 py-2 align-top font-medium text-navy-900">
+                    {i.shortLabel}
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    {i.primarySourceVerified ? (
+                      <span className="rounded bg-emerald-100 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+                        verified
+                      </span>
+                    ) : (
+                      <span className="rounded bg-amber-100 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                        provisional
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 align-top text-xs text-slate-600">
+                    {i.longLabel.replace(/^Legal Notice \d+ of 2026 — /, '')}
+                    {i.notes ? <div className="mt-0.5 text-slate-400">{i.notes}</div> : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
+}
+
+/**
+ * A KCARs citation is "provisional" when its instrument has not been confirmed
+ * against the gazetted primary source on file. Inspector-facing surfaces badge
+ * these so an unverified LN number is never presented as settled fact.
+ */
+function isProvisional(c: Citation): boolean {
+  return c.instrument.framework === 'KCARs' && c.instrument.primarySourceVerified !== true;
 }
 
 function CitationCell({ citations }: { citations: ReadonlyArray<Citation> }) {
@@ -120,8 +170,19 @@ function CitationCell({ citations }: { citations: ReadonlyArray<Citation> }) {
           <div key={idx} className="text-xs">
             <span className="font-medium">{c.instrument.shortLabel}</span>
             {c.section ? <span> {c.section}</span> : null}
+            {isProvisional(c) ? (
+              <span
+                title="Provisional — not yet confirmed against the gazetted primary source on file"
+                className="ml-1 rounded bg-amber-100 px-1 text-[9px] font-semibold uppercase tracking-wide text-amber-800"
+              >
+                provisional
+              </span>
+            ) : null}
             {c.subject ? <div className="text-slate-500">{c.subject}</div> : null}
-            <div className="sr-only">{formatCitation(c)}</div>
+            <div className="sr-only">
+              {formatCitation(c)}
+              {isProvisional(c) ? ' (provisional — primary source not on file)' : ''}
+            </div>
           </div>
         ))}
       </div>
