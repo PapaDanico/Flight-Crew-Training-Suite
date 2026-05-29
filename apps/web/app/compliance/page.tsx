@@ -95,6 +95,14 @@ export default function CompliancePage() {
             >
               KCAA Transmittal (Reg 17(3))
             </a>
+            <a
+              href="/exports/compliance-evidence-pack"
+              target="_blank"
+              rel="noopener"
+              className="rounded border border-navy-400 bg-navy-50 px-2 py-1 text-[10px] font-medium text-navy-900 hover:bg-navy-100"
+            >
+              Compliance Evidence Pack
+            </a>
           </div>
         </div>
 
