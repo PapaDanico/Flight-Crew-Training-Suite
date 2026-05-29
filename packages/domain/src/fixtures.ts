@@ -156,7 +156,174 @@ function pilotSpec(
   };
 }
 
-const DEMO_PILOT_SPECS: ReadonlyArray<DemoPilotSpec> = [
+// ---------------------------------------------------------------------------
+// Synthetic crew expansion
+//
+// The hand-authored anchor pilots below are referenced by the session fixtures
+// and by name-pattern tests. To exercise the dashboard, currency tracker, and
+// KCAA exports at a realistic establishment size, we append a larger synthetic
+// cohort generated deterministically from a fixed seed.
+//
+// IMPORTANT: this is FABRICATED data. It follows the realistic *shape* of a
+// regional East-African operator (establishment size, role/phase mix, expiry
+// clustering with a few near-expiry / expired items) but contains no real or
+// real-derived values — satisfying CLAUDE.md §"Things to avoid" ("Generalised
+// demo data only") and the Kenya DPA 2019. The Capt. Alpha One / F/O Bravo Two
+// NATO-phonetic naming convention is continued (Echo Five, Foxtrot Six, …).
+// ---------------------------------------------------------------------------
+
+const NATO_PHONETIC = [
+  'Alpha',
+  'Bravo',
+  'Charlie',
+  'Delta',
+  'Echo',
+  'Foxtrot',
+  'Golf',
+  'Hotel',
+  'India',
+  'Juliett',
+  'Kilo',
+  'Lima',
+  'Mike',
+  'November',
+  'Oscar',
+  'Papa',
+  'Quebec',
+  'Romeo',
+  'Sierra',
+  'Tango',
+  'Uniform',
+  'Victor',
+  'Whiskey',
+  'Xray',
+  'Yankee',
+  'Zulu',
+] as const;
+
+const ORDINAL_WORD = [
+  'Zero',
+  'One',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+  'Eleven',
+  'Twelve',
+  'Thirteen',
+  'Fourteen',
+  'Fifteen',
+  'Sixteen',
+  'Seventeen',
+  'Eighteen',
+  'Nineteen',
+  'Twenty',
+  'Twenty-One',
+  'Twenty-Two',
+  'Twenty-Three',
+  'Twenty-Four',
+  'Twenty-Five',
+  'Twenty-Six',
+  'Twenty-Seven',
+  'Twenty-Eight',
+  'Twenty-Nine',
+  'Thirty',
+] as const;
+
+/** "Alpha One", "Echo Five", … — the demo naming convention from CLAUDE.md. */
+export function phoneticCallsign(index1: number): string {
+  const word = NATO_PHONETIC[(index1 - 1) % NATO_PHONETIC.length]!;
+  const ord = ORDINAL_WORD[index1] ?? String(index1);
+  return `${word} ${ord}`;
+}
+
+/** Deterministic PRNG (mulberry32) so the synthetic cohort is reproducible. */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// validToDaysAhead ranges chosen so statusFor() lands the named bucket.
+const STATUS_OFFSET_RANGE = {
+  CAUTION: [31, 90],
+  ACTION: [3, 30],
+  EXPIRED: [-45, -1],
+} as const;
+
+function buildSyntheticPilotSpecs(count: number): DemoPilotSpec[] {
+  const rand = mulberry32(0x5af3107a); // fixed seed → reproducible cohort
+  const pick = <T>(arr: ReadonlyArray<T>): T => arr[Math.floor(rand() * arr.length)]!;
+  const between = (lo: number, hi: number): number => lo + Math.floor(rand() * (hi - lo + 1));
+
+  const jakFleets: ReadonlyArray<FleetId> = [FLEET_JAK_F70, FLEET_JAK_F70_HGW];
+  const bases = ['HKJK', 'HKNW', 'HKMO', 'HKEL'] as const; // HKEL = Eldoret (correct ICAO)
+  const driverKinds: ReadonlyArray<CurrencyKind> = [
+    'class1Medical',
+    'opc',
+    'lpc',
+    'lineCheck',
+    'crmTem',
+  ];
+
+  const specs: DemoPilotSpec[] = [];
+  for (let i = 0; i < count; i += 1) {
+    const idx1 = i + 5; // anchors occupy callsigns 1..4 (Alpha One … Delta Four)
+    const toJak = i % 2 === 0; // alternate operators for a balanced split
+    const operatorId = toJak ? OP_JAK : OP_IFLY;
+    const fleetId = toJak ? pick(jakFleets) : FLEET_IFLY_F100;
+    const isCaptain = rand() < 0.45;
+    const role = isCaptain ? 'Captain' : 'First Officer';
+
+    const roll = rand();
+    const phase: TrainingPhase = roll < 0.78 ? 'Line' : roll < 0.92 ? 'RecurrentDue' : 'ITR_FFS';
+
+    const seq = idx1.toString().padStart(2, '0');
+    const opHex = toJak ? '11111111' : '22222222';
+    const id = `${opHex}-bbbb-bbbb-bbbb-0000000000${seq}` as PilotId;
+
+    // 0–2 "driver" currencies pushed near/past expiry; the rest stay CURRENT —
+    // a healthy-but-real fleet, not an all-red demo.
+    const overrides: DemoPilotSpec['currencyOffsets'] = {};
+    const driverCount = rand() < 0.55 ? 1 : rand() < 0.85 ? 2 : 0;
+    for (let d = 0; d < driverCount; d += 1) {
+      const kind = pick(driverKinds);
+      if (mayBeNotApplicable(kind, phase)) continue;
+      const r = rand();
+      const bucket = r < 0.45 ? 'CAUTION' : r < 0.8 ? 'ACTION' : 'EXPIRED';
+      const [lo, hi] = STATUS_OFFSET_RANGE[bucket];
+      overrides[kind] = { validFromDaysAgo: between(150, 360), validToDaysAhead: between(lo, hi) };
+    }
+
+    specs.push(
+      pilotSpec(
+        {
+          id,
+          operatorId,
+          fleetId,
+          fullName: `${isCaptain ? 'Capt.' : 'F/O'} ${phoneticCallsign(idx1)}`,
+          licenceNumber: `KCAA/DEMO/${isCaptain ? 'ATPL' : 'CPL'}/${1000 + idx1}`,
+          role,
+          baseIcao: pick(bases),
+          phase,
+        },
+        overrides,
+      ),
+    );
+  }
+  return specs;
+}
+
+const DEMO_ANCHOR_SPECS: ReadonlyArray<DemoPilotSpec> = [
   pilotSpec({
     id: P_ALPHA,
     operatorId: OP_JAK,
@@ -210,6 +377,17 @@ const DEMO_PILOT_SPECS: ReadonlyArray<DemoPilotSpec> = [
     baseIcao: 'HKML',
     phase: 'ITR_FFS',
   }),
+];
+
+/**
+ * Full demo establishment: the four hand-authored anchors plus a deterministic
+ * synthetic cohort, for a realistic ~24-pilot operator scale across the two
+ * demo operators. Anchors stay first so session fixtures referencing them by
+ * id remain stable.
+ */
+const DEMO_PILOT_SPECS: ReadonlyArray<DemoPilotSpec> = [
+  ...DEMO_ANCHOR_SPECS,
+  ...buildSyntheticPilotSpecs(20),
 ];
 
 export const DEMO_PILOTS: ReadonlyArray<Pilot> = DEMO_PILOT_SPECS.map((s) => s.pilot);

@@ -27,13 +27,28 @@ describe('demo fixtures', () => {
     assert.equal(DEMO_OPERATORS[1]!.shortCode, 'IFLY-DEMO');
   });
 
-  it('seeds four pilots split across operators', () => {
-    assert.equal(DEMO_PILOTS.length, 4);
+  it('seeds a realistic establishment split across both operators', () => {
+    // Four hand-authored anchors + a deterministic synthetic cohort.
+    assert.equal(DEMO_PILOTS.length, 24);
     const byOperator = new Map<string, number>();
     for (const p of DEMO_PILOTS) {
       byOperator.set(p.operatorId, (byOperator.get(p.operatorId) ?? 0) + 1);
     }
-    assert.deepEqual(Array.from(byOperator.values()).sort(), [2, 2]);
+    assert.deepEqual(Array.from(byOperator.values()).sort(), [12, 12]);
+    // anchors must still be present and first
+    for (const name of ['Alpha One', 'Bravo Two', 'Charlie Three', 'Delta Four']) {
+      assert.ok(
+        DEMO_PILOTS.some((p) => p.fullName.includes(name)),
+        `anchor pilot ${name} missing`,
+      );
+    }
+  });
+
+  it('assigns a unique id and licence number to every pilot', () => {
+    const ids = new Set(DEMO_PILOTS.map((p) => p.id));
+    const lics = new Set(DEMO_PILOTS.map((p) => p.licenceNumber));
+    assert.equal(ids.size, DEMO_PILOTS.length, 'pilot ids must be unique');
+    assert.equal(lics.size, DEMO_PILOTS.length, 'licence numbers must be unique');
   });
 
   it('every pilot has a fleet that belongs to its operator', () => {
@@ -45,10 +60,11 @@ describe('demo fixtures', () => {
     }
   });
 
-  it('uses the Capt. Alpha One / F/O Bravo Two demo naming pattern', () => {
+  it('uses the Capt./F/O NATO-phonetic demo naming pattern with no real PII', () => {
+    // e.g. "Capt. Alpha One", "F/O Foxtrot Six" — fabricated, never real names.
     for (const p of DEMO_PILOTS) {
-      assert.match(p.fullName, /(Alpha One|Bravo Two|Charlie Three|Delta Four)/);
-      assert.match(p.licenceNumber, /^KCAA\/DEMO\//);
+      assert.match(p.fullName, /^(Capt\.|F\/O) [A-Z][a-z]+ [A-Z][a-z]+(-[A-Z][a-z]+)?$/);
+      assert.match(p.licenceNumber, /^KCAA\/DEMO\/(ATPL|CPL)\/\d+$/);
     }
   });
 });
