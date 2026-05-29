@@ -103,6 +103,14 @@ export default function CompliancePage() {
             >
               Compliance Evidence Pack
             </a>
+            <a
+              href="/documents/diff"
+              target="_blank"
+              rel="noopener"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-[10px] font-medium text-slate-700 hover:bg-slate-50"
+            >
+              OM-A version diff (Rev 6→7)
+            </a>
           </div>
         </div>
 

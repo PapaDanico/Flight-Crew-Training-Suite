@@ -181,3 +181,88 @@ export function buildLetterOfEffectivePages(
     effectiveDate: rows.length === 0 ? null : toIsoDate(new Date(effectiveMs)),
   };
 }
+
+/**
+ * Per-page diff between two document versions. Heads of Training need to know
+ * exactly what changed since the last approved version (CLAUDE.md §"Document
+ * version control"). A page is REVISED when its content hash differs (or, if
+ * hashes match, its revision label moved); ADDED / REMOVED track page set
+ * changes; everything else is UNCHANGED. Pure — keyed by page number.
+ */
+export const PAGE_CHANGE_KIND = ['ADDED', 'REMOVED', 'REVISED', 'UNCHANGED'] as const;
+export type PageChangeKind = (typeof PAGE_CHANGE_KIND)[number];
+
+export interface PageDiff {
+  readonly pageNumber: number;
+  readonly kind: PageChangeKind;
+  readonly fromRevisionLabel: string | null;
+  readonly toRevisionLabel: string | null;
+  /** Revision date of the page in the target version (or source, if removed). */
+  readonly lastRevisedAt: IsoDateTime | null;
+}
+
+export interface DocumentVersionDiff {
+  readonly pages: ReadonlyArray<PageDiff>;
+  readonly summary: {
+    readonly added: number;
+    readonly removed: number;
+    readonly revised: number;
+    readonly unchanged: number;
+    readonly total: number;
+  };
+}
+
+export function diffDocumentVersions(
+  from: ReadonlyArray<DocumentPage>,
+  to: ReadonlyArray<DocumentPage>,
+): DocumentVersionDiff {
+  const fromByPage = new Map(from.map((p) => [p.pageNumber, p]));
+  const toByPage = new Map(to.map((p) => [p.pageNumber, p]));
+  const pageNumbers = [...new Set([...fromByPage.keys(), ...toByPage.keys()])].sort(
+    (a, b) => a - b,
+  );
+
+  const pages: PageDiff[] = pageNumbers.map((pageNumber) => {
+    const a = fromByPage.get(pageNumber);
+    const b = toByPage.get(pageNumber);
+    if (a && !b) {
+      return {
+        pageNumber,
+        kind: 'REMOVED',
+        fromRevisionLabel: a.revisionLabel,
+        toRevisionLabel: null,
+        lastRevisedAt: a.lastRevisedAt,
+      };
+    }
+    if (!a && b) {
+      return {
+        pageNumber,
+        kind: 'ADDED',
+        fromRevisionLabel: null,
+        toRevisionLabel: b.revisionLabel,
+        lastRevisedAt: b.lastRevisedAt,
+      };
+    }
+    // Both present.
+    const changed = a!.contentHash !== b!.contentHash || a!.revisionLabel !== b!.revisionLabel;
+    return {
+      pageNumber,
+      kind: changed ? 'REVISED' : 'UNCHANGED',
+      fromRevisionLabel: a!.revisionLabel,
+      toRevisionLabel: b!.revisionLabel,
+      lastRevisedAt: b!.lastRevisedAt,
+    };
+  });
+
+  const count = (k: PageChangeKind) => pages.filter((p) => p.kind === k).length;
+  return {
+    pages,
+    summary: {
+      added: count('ADDED'),
+      removed: count('REMOVED'),
+      revised: count('REVISED'),
+      unchanged: count('UNCHANGED'),
+      total: pages.length,
+    },
+  };
+}

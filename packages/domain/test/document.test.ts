@@ -5,6 +5,7 @@ import {
   assessSubmissionReadiness,
   buildLetterOfEffectivePages,
   calculateSubmissionDeadline,
+  diffDocumentVersions,
   type DocumentPage,
 } from '../src/document.js';
 import type { DocumentVersionId, IsoDate, IsoDateTime } from '../src/branded.js';
@@ -91,5 +92,50 @@ describe('buildLetterOfEffectivePages', () => {
     const lep = buildLetterOfEffectivePages([]);
     assert.equal(lep.pageCount, 0);
     assert.equal(lep.effectiveDate, null);
+  });
+});
+
+describe('diffDocumentVersions', () => {
+  const pg = (n: number, rev: string, hash: string): DocumentPage => ({
+    documentVersionId: 'dv' as DocumentVersionId,
+    pageNumber: n,
+    revisionLabel: rev,
+    lastRevisedAt: '2026-05-01T00:00:00.000Z' as IsoDateTime,
+    contentHash: hash,
+  });
+
+  it('classifies added, removed, revised and unchanged pages', () => {
+    const from = [pg(1, 'Rev 1', 'h1'), pg(2, 'Rev 1', 'h2'), pg(3, 'Rev 1', 'h3')];
+    const to = [pg(1, 'Rev 1', 'h1'), pg(2, 'Rev 2', 'h2b'), pg(4, 'Rev 1', 'h4')];
+    const diff = diffDocumentVersions(from, to);
+    const byPage = new Map(diff.pages.map((p) => [p.pageNumber, p.kind]));
+    assert.equal(byPage.get(1), 'UNCHANGED');
+    assert.equal(byPage.get(2), 'REVISED');
+    assert.equal(byPage.get(3), 'REMOVED');
+    assert.equal(byPage.get(4), 'ADDED');
+    assert.deepEqual(diff.summary, {
+      added: 1,
+      removed: 1,
+      revised: 1,
+      unchanged: 1,
+      total: 4,
+    });
+  });
+
+  it('treats a revision-label move with the same hash as REVISED', () => {
+    const diff = diffDocumentVersions([pg(1, 'Rev 1', 'h1')], [pg(1, 'Rev 2', 'h1')]);
+    assert.equal(diff.pages[0]?.kind, 'REVISED');
+    assert.equal(diff.pages[0]?.fromRevisionLabel, 'Rev 1');
+    assert.equal(diff.pages[0]?.toRevisionLabel, 'Rev 2');
+  });
+
+  it('orders pages and is empty-safe', () => {
+    assert.deepEqual(diffDocumentVersions([], []).pages, []);
+    const diff = diffDocumentVersions([], [pg(2, 'Rev 1', 'h'), pg(1, 'Rev 1', 'h')]);
+    assert.deepEqual(
+      diff.pages.map((p) => p.pageNumber),
+      [1, 2],
+    );
+    assert.equal(diff.summary.added, 2);
   });
 });
