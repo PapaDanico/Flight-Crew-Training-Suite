@@ -37,7 +37,7 @@ Click on **Capt. Charlie Three** (the I-Fly pilot with the expired medical).
 Mention what's not yet here:
 
 - "Assessment history slot is reserved — Sprint 4 wires it up when we have AssessmentResult persistence."
-- "Pilot Training File PDF — Sprint 3 deliverable. Today the inspector can still download the operator snapshot."
+- "Pilot Training File PDF is live — per-pilot complete history, alongside the operator-wide snapshot, the OM Cross-Reference Matrix, and the KCAA transmittal letter."
 
 ### 4. KCAA snapshot export — 60 s
 
@@ -72,25 +72,35 @@ Wait ~8 seconds.
 
 Show the metadata strip: model id, prompt version, attempt count, cache token-read count if visible.
 
-Now click the **E190** type button.
+Now click the **B737** type button.
 
-> "Same platform. Different type. Click — and you see the preview banner: the operational technique and AI calibration haven't been populated by an E190 TRI/TRE yet, so the platform refuses to invent specifics. The prompt falls back to generic content. Phase 1 of an E190 deployment is the moment that TRI/TRE populates the profile and flips it to production-ready."
+> "Same platform. Different type. Click — and you see the preview banner: the operational technique and AI calibration haven't been populated by a B737-qualified TRI/TRE yet, so the platform refuses to invent specifics. The prompt falls back to generic content. Phase 1 of a B737 deployment is the moment that TRI/TRE populates the profile and flips it to production-ready."
 
-Generate one in E190 mode. Note the questions are noticeably more generic — and that's the point: **the platform never invents safety-relevant aviation facts**.
+Generate one in B737 mode. Note the questions are noticeably more generic — and that's the point: **the platform never invents safety-relevant aviation facts**.
 
 ### 7. Aircraft + Compliance — 60 s
 
 `/aircraft?typeId=F70_100`:
 
-> "F70/100 facts page. Engine, APU, hydraulics, OEI technique, fuel asymmetry. FDAP-mandatory flag computed per variant from KCARs Reg 56(2) — the platform knows which of the operator's fleet must run FDAP."
+> "F70/100 facts page. Engine, APU, hydraulics, OEI technique, fuel asymmetry. FDAP-mandatory flag computed per variant from the >27,000 kg MTOW rule — both F70 and F100 qualify. (The requirement lives in LN 29, the CAT-aeroplane operations regulation, and is restated for AOC holders in LN 42.) The platform knows which of the operator's fleet must run FDAP."
 
-Click the E190 button.
+Click the B737 button.
 
 > "Same page, different profile. Preview banner. Operational facts say 'pending primary source' until a qualified instructor populates them."
 
 `/compliance`:
 
-> "9-domain cross-reference matrix: every domain mapped to its KCARs, ICAO, FAA, and EASA citations. Third Schedule structure. Sixth Schedule penalties. Every cell is a typed `Citation` from `@dnca/ontology` — same constants the AI prompt and the export use."
+> "9-domain cross-reference matrix: every domain mapped to its KCARs, ICAO, FAA, and EASA citations. Third Schedule structure (61 clauses, four sub-sections, transcribed from the gazette). Sixth Schedule penalties — verified verbatim against LN 42 r. 82. Every cell is a typed `Citation` from `@dnca/ontology` — the same constants the AI prompt and the exports use."
+
+> "Scroll to **KCARs 2025 source provenance**. Every binding Legal Notice is badged **verified** and links straight to its official **Kenya Law** record — LN 29 through 42, titles and effective dates confirmed against primary source. If we ever cite a notice we haven't confirmed, it shows **provisional** in amber, everywhere it appears. An inspector is never shown an unverified regulation as settled fact — that discipline is built into the data model, not a promise."
+
+### 7b. Per-operator configuration `/operators` — 45 s
+
+> "The platform is one spine, configured per operator. Each operator card shows their stabilised-approach gate heights (KCARs leaves these to the operator's OM-A — we don't hardcode them), grading scale (AS/S/MS/BS or ICAO 1–5), fuel policy, and OpSpec chips — RVSM, RNP, Cat II/III, LVO, EDTO. Branding swatches too. JAK and I-Fly are different deployments of the same engine."
+
+### 7c. Scheduling + notifications `/scheduling`, `/notifications` — 60 s
+
+> "`/scheduling` turns the expiry cascade into a booking plan — what has to be booked now, what to plan, what's overdue — grouped by urgency with a booking-lead-time buffer. `/notifications` is the alert engine: one digest per crew member, channels chosen by their most-severe item (email / SMS / Telegram), with per-band de-duplication so nobody is pestered twice for the same 30-day band. Today it shows the dry-run plan; turning on real sending is a provider switch, not a rebuild."
 
 ### 8. Close — 30 s
 
@@ -102,7 +112,7 @@ Click the E190 button.
 
 - **"Is our data secure?"** — Multi-tenant from day one. Postgres row-level security at the database boundary; an application bug can't leak across operators. Data stays in AWS af-south-1 (Cape Town) or Azure South Africa North for Kenya DPA 2019 residency.
 - **"What if you're hit by a bus?"** — Every regulatory claim the platform makes is cited to a primary source you can verify. The audit log is append-only and immutable. Your data and your manuals are exportable at any point. The platform doesn't lock you in; the consulting service does the heavy lifting.
-- **"Why F70/100? We fly something else."** — F70/100 is the first production-ready type calibration. The platform itself is type-agnostic — adding your type is a Phase 1 content task, not a code change. Embraer 190 is in preview today; ATR 72 and E170 are the next targets.
+- **"Why F70/100? We fly something else."** — F70/100 is the first production-ready type calibration (the I-Fly demo). The platform itself is type-agnostic — adding your type is a Phase 1 content task, not a code change. Boeing 737NG is in preview today (the JAK demo); ATR 72, E170, and E190 are the next targets.
 - **"What's it cost?"** — Phase 0: $8–12k. Phase 1: $65–110k. Phase 2: $35–60k. Phase 3: $25–40k/yr. Phase 0 credits to Phase 1.
 - **"When can you start?"** — Phase 0 in two weeks. Soft-booked through Q3 2026; first hard slots available immediately for Reg 84 transition urgency.
 
@@ -114,10 +124,9 @@ Click the E190 button.
 
 ## What's NOT in the demo (yet) — be honest if asked
 
-- Writes: the API + auth layer is gated on the framework/auth-provider decisions. Today's surface is read-only.
-- Notifications: email expiry reminders are Sprint 3.
+- Writes: the API + auth layer is gated on the auth-provider decision (WorkOS shelved for now on cost). Today's web surface renders from deterministic fixtures; the DB-backed write path (Fastify + Postgres RLS + append-only audit) is built and tested, awaiting the hosting/auth go-ahead.
+- Notification **sending**: the planning, digesting, and per-band de-dup are live as a dry-run; real dispatch needs a provider/secret choice (email — Resend/SES; SMS — Africa's Talking; Telegram).
 - KCAA submission letter auto-generation: Sprint 3.
 - Document version diff view: Sprint 3.
-- SMS notifications via Africa's Talking: post-MVP.
 
 The pitch isn't "this is finished" — it's "this is the spine, calibrated to your aircraft type, and Phase 2 is where it becomes your system of record."

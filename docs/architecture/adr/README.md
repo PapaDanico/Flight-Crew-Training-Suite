@@ -34,6 +34,9 @@ Each ADR captures one architectural decision in context: why it was needed, what
 | [0004](./0004-domain-package-source-of-truth.md) | Accepted | `@dnca/domain` is the single source of truth for entity types   |
 | [0005](./0005-drizzle-orm-for-db-layer.md)       | Accepted | Drizzle ORM + drizzle-kit for the database layer                |
 | [0006](./0006-aircraft-type-profile-plug-in.md)  | Accepted | `AircraftTypeProfile` as the type-extensibility plug-in pattern |
+| [0007](./0007-fastify-backend.md)                | Accepted | Fastify for the backend API                                     |
+| [0008](./0008-workos-auth.md)                    | Accepted | WorkOS for authentication and SSO                               |
+| [0009](./0009-aws-af-south-1-hosting.md)         | Accepted | AWS `af-south-1` (Cape Town) for production hosting             |
 
 ## Open architectural decisions
 

@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Migration 0001: initial schema, RLS policies, append-only audit log.
 --
--- Bootstrap migration for the Fokker 70/100 Flight Crew Training Suite.
+-- Bootstrap migration for the DNCA Flight Crew Training Suite.
 -- Implements:
 --   - Postgres enum types matching @dnca/domain enums
 --   - All tenant-scoped tables with operator_id FK
@@ -502,9 +502,26 @@ END$$;
 -- parent.operator_id) is enforced by the application's repository layer and
 -- verified by an integration test against seeded fixtures.
 
--- audit_events is global by design (operator_id is nullable). Reads from RLS-
--- scoped sessions naturally only see their own operator's events; cross-tenant
--- read is restricted to platform_admin which BYPASSes RLS.
+-- audit_events also carries RLS. operator_id is nullable (global/pre-auth
+-- events such as AUTH_LOGIN_FAILED have no operator yet), so it is excluded
+-- from the loop above and given bespoke policies here. WITHOUT this, app_runtime
+-- (which holds GRANT SELECT below and is NOT a BYPASSRLS role) could read every
+-- operator's audit rows — including PII in before_state/after_state. RLS on the
+-- other tables does NOT constrain a direct SELECT on audit_events.
+--   * SELECT scoped to the current operator; global (NULL) and cross-tenant rows
+--     are visible only to platform_admin (BYPASSRLS) — the "cross-tenant queries
+--     restricted to platform-admin" rule (CLAUDE.md §"Multi-tenancy").
+--   * INSERT permits the current operator's rows and global (NULL) rows so the
+--     auth layer can record pre-auth events. UPDATE/DELETE have no policy and
+--     remain blocked by the append-only triggers and the REVOKE below.
+ALTER TABLE audit_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_events FORCE ROW LEVEL SECURITY;
+CREATE POLICY audit_events_tenant_read ON audit_events
+  FOR SELECT
+  USING (operator_id = current_operator_id());
+CREATE POLICY audit_events_tenant_insert ON audit_events
+  FOR INSERT
+  WITH CHECK (operator_id = current_operator_id() OR operator_id IS NULL);
 
 -- ---------------------------------------------------------------------------
 -- Grants

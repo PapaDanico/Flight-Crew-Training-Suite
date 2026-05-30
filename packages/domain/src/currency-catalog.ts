@@ -33,7 +33,11 @@ export const CURRENCY_CATALOG: ReadonlyArray<CurrencyCatalogEntry> = [
     label: 'Class 1 Medical',
     category: 'Personal',
     cycle: { kind: 'months', months: 12 },
-    primarySource: 'ICAO Annex 1 §6.3 / KCARs PEL',
+    primarySource: 'ICAO Annex 1 / KCARs LN 50/2026 (Personnel Licensing)',
+    notes:
+      'Validity is age-dependent: 12 months under 40; 6 months at 40+ (and 6 months at 60+ in ' +
+      'multi-crew CAT). The 12-month cycle here is the under-40 baseline — use ' +
+      'class1MedicalValidityMonths(age) to derive the correct window.',
   },
   {
     kind: 'atplCpl',
@@ -50,7 +54,7 @@ export const CURRENCY_CATALOG: ReadonlyArray<CurrencyCatalogEntry> = [
       kind: 'per-event',
       description: 'Level 4 = 3 yr · Level 5 = 6 yr · Level 6 = lifetime',
     },
-    primarySource: 'ICAO Annex 1 §1.2.9',
+    primarySource: 'ICAO Annex 1 §1.2.9 / KCARs LN 50/2026 reg 8 + Second Schedule',
   },
   {
     kind: 'passportVisa',
@@ -137,6 +141,9 @@ export const CURRENCY_CATALOG: ReadonlyArray<CurrencyCatalogEntry> = [
     category: 'Operational',
     cycle: { kind: 'days-rolling', days: 90, requirement: '3 take-offs/landings' },
     primarySource: 'ICAO Annex 6 Pt I §9.4.4 / FAA 14 CFR 61.57',
+    notes:
+      'KCARs LN 50/2026 reg 11 delegates recent-experience specifics to the Authority/operator; ' +
+      'the 90-day / 3 take-offs-and-landings figure is the ICAO/FAA standard the scheme adopts.',
   },
 
   {
@@ -212,4 +219,14 @@ export function lookupCurrency(kind: CurrencyKind): CurrencyCatalogEntry {
     throw new Error(`Currency kind ${kind} missing from catalog`);
   }
   return entry;
+}
+
+/**
+ * Class 1 medical certificate validity in months by age — KCARs LN 50/2026
+ * (Personnel Licensing), aligned to ICAO Annex 1: 12 months under 40; 6 months
+ * at 40 or over (and at 60+ in multi-crew CAT). Use to derive a medical validTo
+ * from an issue/renewal date when auto-computing the window.
+ */
+export function class1MedicalValidityMonths(ageYears: number): 6 | 12 {
+  return ageYears >= 40 ? 6 : 12;
 }

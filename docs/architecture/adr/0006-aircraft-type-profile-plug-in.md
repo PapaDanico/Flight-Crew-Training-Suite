@@ -10,7 +10,7 @@ CLAUDE.md and README position the platform as a forward-deployed engineering mod
 
 That worked while there was one type. The commercial assessment surfaces two reasons to generalise now:
 
-1. **Market depth.** The global active F70/100 fleet is small and end-of-life. Extending to East African workhorses (Embraer E170/190, ATR 72, B737-NG) materially enlarges the addressable market without rebuilding the spine.
+1. **Market depth.** The global active F70/100 fleet is small and end-of-life. Extending to East African workhorses (Boeing 737NG, Embraer E170/190, ATR 72) materially enlarges the addressable market without rebuilding the spine.
 2. **Operator configurability.** Per the deployment model, each operator should be able to enable the aircraft types they actually fly — no more, no less.
 
 The constraint is safety. Aviation facts are not generic content; an invented engine designation or fuel-asymmetry limit is a credibility-destroying defect. The plug-in pattern must distinguish between (a) facts that are sourced and ready for operator use and (b) profiles that are structurally present but pending primary-source population.
@@ -24,7 +24,7 @@ Introduce a typed entity `AircraftTypeProfile` in `@dnca/domain` that holds:
 - **Operational profile** — takeoff/landing flap policy, OEI technique, max fuel asymmetry, approach-speed source, decision framework. Every operational field is optional; a `pendingPrimarySource` flag marks the profile as not-yet-cleared for operator use.
 - **AI calibration** — examiner role description (always present), technical-facts block (optional, populated when ready), regulatory anchors, question-quality requirements.
 
-A registry `AIRCRAFT_TYPE_PROFILES` lists the platform's known types. `F70_100_PROFILE` is `production-ready` and the default; `E190_PROFILE` (and future types) start as `preview` with structural presence and clear gaps until a TRI/TRE flagged for that type populates the operational and AI-calibration content.
+A registry `AIRCRAFT_TYPE_PROFILES` lists the platform's known types. `F70_100_PROFILE` is `production-ready` and the default; `B737_PROFILE` (and future types) start as `preview` with structural presence and clear gaps until a TRI/TRE flagged for that type populates the operational and AI-calibration content.
 
 `@dnca/prompts` builds the system-prompt calibration block at request time by reading the profile. The static block remains cacheable (Anthropic prompt cache) because the profile content is deterministic per type; only the per-request dynamic block carries topic and target.
 
@@ -33,14 +33,14 @@ A registry `AIRCRAFT_TYPE_PROFILES` lists the platform's known types. `F70_100_P
 - A type selector on `/assessments`. Selecting a `preview` profile shows a warning and emits a less-specific prompt rather than fabricated technical claims.
 - A `/aircraft?typeId=…` profile-driven view that replaces the old F70-only page.
 
-The Postgres `fleet_variant` enum migration to support additional types (E190, E190-AR, etc.) is deferred to a follow-up migration. Profiles are an in-memory abstraction first; storage joins them in Sprint 4 when an operator deploys with a non-F70 fleet.
+The Postgres `fleet_variant` enum was extended in migration `0002_fleet_variant_b737.sql` to add `'B737'` when the demo seed adopted Jubba Airways Kenya as the B737NG preview-tier deployment. Future types follow the same additive-migration pattern.
 
 ## Consequences
 
-- **Operator deployments fan out without spine changes.** Adding the E190 to an operator's contract becomes a content task (populate the profile, calibrate prompts) rather than an engineering task.
+- **Operator deployments fan out without spine changes.** Adding the B737NG (or any other type) to an operator's contract becomes a content task (populate the profile, calibrate prompts) rather than an engineering task.
 - **Safety discipline is enforced by the type system.** A `preview` profile's missing `technicalFactsBlock` makes the AI prompt fall back to a generic examiner role rather than inventing facts. CLAUDE.md's "don't generate fake aviation facts" rule is now structural, not just advisory.
 - **The platform-vs-deployment distinction crystallises.** Profile authoring is a deployment activity owned by the operator's TRI/TRE. The platform code is profile-agnostic.
-- **F70/100 stays the production-ready primary** with no behavioural change for JAK / I-Fly. Existing tests, fixtures, and demo flows continue to work; selecting F70/100 in the type selector produces the same prompt and the same outputs as today.
+- **F70/100 stays the production-ready primary**, with the demo seed assigning the F70/100 production demo to I-Fly Air Solutions and a B737NG preview demo to Jubba Airways Kenya. Existing tests, fixtures, and demo flows continue to work; selecting F70/100 in the type selector produces the same prompt and the same outputs as before.
 - **`AIRCRAFT_FACTS` is preserved** as a derived export for back-compat. New code should consume `F70_100_PROFILE.manufacturerFacts` directly.
 
 ## Alternatives considered

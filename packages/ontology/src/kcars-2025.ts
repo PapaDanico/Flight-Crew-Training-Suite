@@ -1,33 +1,52 @@
 import type { Citation, RegulatoryInstrument } from './citation.js';
 
 /**
- * KCARs 2025 — Kenya Civil Aviation Regulations, gazetted as Legal Notices
- * 29, 30, 31, 37, 40, 41, 42 of 2026. The 2018 regulations are repealed.
+ * KCARs 2025 — Kenya Civil Aviation Regulations, gazetted as Legal Notices of
+ * 2026. The 2018 regulations are repealed.
  *
- * Effective dates per CLAUDE.md / README.
+ * Verification state (`primarySourceVerified`) records whether the instrument's
+ * subject/number/date was checked against the authoritative primary source.
+ * All seven binding-law notices (29/30/31/37/40/41/42) are now confirmed:
+ * LN 40 and LN 42 against the gazette PDFs on file, and all seven against the
+ * official Kenya Law record (`authoritativeUrl`, the Akoma-Ntoso URN). The
+ * effective dates fall in three gazette batches: 3 Mar 2026 (LN 29/30/31),
+ * 6 Mar 2026 (LN 37/40/41/42) and 25 Mar 2026 (the later operational set).
+ * See kcars-2025-alignment.md §1.6.
  */
 export const LN_29_2026: RegulatoryInstrument = {
   framework: 'KCARs',
   instrumentId: 'LN-29-2026',
   shortLabel: 'LN 29/2026',
-  longLabel: 'Legal Notice 29 of 2026 — Operations (Aeroplanes)',
+  longLabel:
+    'Legal Notice 29 of 2026 — Operation of Aircraft for Commercial Air Transport (Aeroplanes)',
   effectiveDate: '2026-03-03',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/29/eng@2026-03-03',
+  primarySourceVerified: true,
+  notes:
+    'CAT-aeroplane operations regulation (distinct from LN 47, General Aviation — Aeroplanes). Read from the gazette PDF: Human-Factors-in-checklists is reg 15(2); flight-recorder-records preservation is reg 87 (period per the Accident Investigation Regs); reg 6(2)(a) carries a >27,000 kg aircraft-tracking threshold. FDAP is in LN 42, not LN 29. The earlier 32(3)/38(3)/56(2)/18(3)(i) citations were repealed-LN 126/2018 numbering and have been corrected.',
 };
 
 export const LN_30_2026: RegulatoryInstrument = {
   framework: 'KCARs',
   instrumentId: 'LN-30-2026',
   shortLabel: 'LN 30/2026',
-  longLabel: 'Legal Notice 30 of 2026 — Safety Management & ATS',
+  longLabel: 'Legal Notice 30 of 2026 — Air Traffic Services',
   effectiveDate: '2026-03-03',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/30/eng@2026-03-03',
+  primarySourceVerified: true,
+  notes: 'Safety Management is a separate instrument (LN 32/2026).',
 };
 
 export const LN_31_2026: RegulatoryInstrument = {
   framework: 'KCARs',
   instrumentId: 'LN-31-2026',
   shortLabel: 'LN 31/2026',
-  longLabel: 'Legal Notice 31 of 2026 — Aviation Security & Personnel Licensing',
+  longLabel: 'Legal Notice 31 of 2026 — Security',
   effectiveDate: '2026-03-03',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/31/eng@2026-03-03',
+  primarySourceVerified: true,
+  notes:
+    'Official short title is "(Security) Regulations" (aviation security / AVSEC). Personnel Licensing is a separate instrument (LN 50/2026).',
 };
 
 export const LN_37_2026: RegulatoryInstrument = {
@@ -35,7 +54,9 @@ export const LN_37_2026: RegulatoryInstrument = {
   instrumentId: 'LN-37-2026',
   shortLabel: 'LN 37/2026',
   longLabel: 'Legal Notice 37 of 2026 — Airworthiness',
-  effectiveDate: '2026-03-03',
+  effectiveDate: '2026-03-06',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/37/eng@2026-03-06',
+  primarySourceVerified: true,
 };
 
 export const LN_40_2026: RegulatoryInstrument = {
@@ -43,22 +64,33 @@ export const LN_40_2026: RegulatoryInstrument = {
   instrumentId: 'LN-40-2026',
   shortLabel: 'LN 40/2026',
   longLabel: 'Legal Notice 40 of 2026 — Unmanned Aircraft Systems',
-  effectiveDate: '2026-03-03',
+  effectiveDate: '2026-03-06',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/40/eng@2026-03-06',
+  primarySourceVerified: true,
 };
 
 export const LN_41_2026: RegulatoryInstrument = {
   framework: 'KCARs',
   instrumentId: 'LN-41-2026',
   shortLabel: 'LN 41/2026',
-  longLabel: 'Legal Notice 41 of 2026 — Aerodromes',
-  effectiveDate: '2026-03-03',
+  longLabel: 'Legal Notice 41 of 2026 — Certification, Licensing and Registration of Aerodromes',
+  effectiveDate: '2026-03-06',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/41/eng@2026-03-06',
+  primarySourceVerified: true,
 };
 
 /**
- * LN 42/2026 — Air Operator Certification & Administration. Its Third Schedule
- * is the binding Operations Manual content list: §2.1 (34 OM clauses) and
- * §2.2 (12 mandatory training topics). Population of clause subjects awaits
- * the primary-source PDF — see THIRD_SCHEDULE below.
+ * LN 42/2026 — Air Operator Certification & Administration (Kenya Gazette
+ * Supplement No. 52, 6 March 2026; Legislative Supplement No. 37). Its Third
+ * Schedule (rr. 30(1) and 31(2)) is the binding Operations Manual content
+ * list. Verified against the gazetted PDF, its structure is:
+ *   §2.1 General — 39 clauses (2.1.1–2.1.39)
+ *   §2.2 Aircraft operating information — 13 clauses (2.2.1–2.2.13)
+ *   §2.3 Routes, aerodromes and heliports — 6 clauses (2.3.1–2.3.6)
+ *   §2.4 Training — 3 clauses (2.4.1–2.4.3)
+ * See THIRD_SCHEDULE below. (The earlier "§2.1 = 34 clauses / §2.2 = 12
+ * training topics" summary was inaccurate and has been corrected to the
+ * gazetted text.)
  */
 export const LN_42_2026: RegulatoryInstrument = {
   framework: 'KCARs',
@@ -66,7 +98,10 @@ export const LN_42_2026: RegulatoryInstrument = {
   shortLabel: 'LN 42/2026',
   longLabel: 'Legal Notice 42 of 2026 — Air Operator Certification & Administration',
   effectiveDate: '2026-03-06',
-  notes: 'Third Schedule is the binding OM content list.',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/42/eng@2026-03-06',
+  primarySourceVerified: true,
+  notes:
+    'Read in full from the gazette PDF. Third Schedule is the binding OM content list; Sixth Schedule (r. 82) carries the penalties; reg 17(3) is the 30-day submission rule.',
 };
 
 export const KCARS_2025_INSTRUMENTS: ReadonlyArray<RegulatoryInstrument> = [
@@ -79,6 +114,65 @@ export const KCARS_2025_INSTRUMENTS: ReadonlyArray<RegulatoryInstrument> = [
   LN_42_2026,
 ];
 
+// ---------------------------------------------------------------------------
+// Related KCARs 2025 instruments the platform cites outside the core
+// binding-law set. Each confirmed against the official Kenya Law record and
+// present in the gazette PDFs on file. LN 32 is the SMS that FDAP plugs into;
+// LN 50 is the currency-catalogue source for medical/ELP/recency; LN 47 is the
+// General-Aviation operations regulation (the non-CAT sibling of LN 29).
+// ---------------------------------------------------------------------------
+
+export const LN_32_2026: RegulatoryInstrument = {
+  framework: 'KCARs',
+  instrumentId: 'LN-32-2026',
+  shortLabel: 'LN 32/2026',
+  longLabel: 'Legal Notice 32 of 2026 — Safety Management',
+  effectiveDate: '2026-03-03',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/32/eng@2026-03-03',
+  primarySourceVerified: true,
+  notes: 'The SMS framework that the FDAP requirement (LN 29/LN 42) forms part of.',
+};
+
+export const LN_47_2026: RegulatoryInstrument = {
+  framework: 'KCARs',
+  instrumentId: 'LN-47-2026',
+  shortLabel: 'LN 47/2026',
+  longLabel: 'Legal Notice 47 of 2026 — Operation of Aircraft (General Aviation — Aeroplanes)',
+  effectiveDate: '2026-03-25',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/47/eng@2026-03-25',
+  primarySourceVerified: true,
+  notes: 'General-Aviation operations; the CAT-aeroplane sibling is LN 29.',
+};
+
+export const LN_50_2026: RegulatoryInstrument = {
+  framework: 'KCARs',
+  instrumentId: 'LN-50-2026',
+  shortLabel: 'LN 50/2026',
+  longLabel: 'Legal Notice 50 of 2026 — Personnel Licensing',
+  effectiveDate: '2026-03-25',
+  authoritativeUrl: 'https://new.kenyalaw.org/akn/ke/act/ln/2026/50/eng@2026-03-25',
+  primarySourceVerified: true,
+  notes:
+    'Currency-catalogue source for Class 1 medical (age-dependent), ELP re-validation cadence (reg 8) and recent-experience (reg 11). Read in full.',
+};
+
+/**
+ * The full set of KCARs 2025 instruments the platform cites — the binding-law
+ * core plus the related instruments above. Used by inspector-facing provenance
+ * surfaces so every cited Legal Notice shows its verification state and links to
+ * the authoritative Kenya Law record.
+ */
+export const KCARS_2025_RELATED_INSTRUMENTS: ReadonlyArray<RegulatoryInstrument> = [
+  LN_32_2026,
+  LN_47_2026,
+  LN_50_2026,
+];
+
+export const KCARS_2025_ALL_INSTRUMENTS: ReadonlyArray<RegulatoryInstrument> = [
+  ...KCARS_2025_INSTRUMENTS,
+  ...KCARS_2025_RELATED_INSTRUMENTS,
+];
+
 /**
  * Key binding regulations, citable individually. Sections use KCARs native
  * notation (e.g. '17(3)' for sub-paragraph (3) of regulation 17).
@@ -89,28 +183,48 @@ export const REG_17_3: Citation = {
   subject: 'Manuals submitted to KCAA at least 30 days before intended implementation',
 };
 
-export const REG_32_3: Citation = {
+/**
+ * Human Factors in checklist design — verified against the gazetted LN 29 of
+ * 2026, reg 15(2): "The design and utilization of checklist in subregulation (1)
+ * shall observe human factors principles." (The earlier `REG_32_3`/`REG_38_3`
+ * citations carried the repealed LN 126/2018 numbering — in LN 29, reg 32 is
+ * cargo-compartment fire suppression and reg 38 is use of oxygen. Corrected.)
+ */
+export const REG_15_2: Citation = {
   instrument: LN_29_2026,
-  section: '32(3)',
-  subject: 'Human Factors statutory in checklist design',
+  section: '15(2)',
+  subject: 'Design and utilisation of checklists shall observe human factors principles',
 };
 
-export const REG_38_3: Citation = {
-  instrument: LN_29_2026,
-  section: '38(3)',
-  subject: 'Human Factors statutory in checklist design (companion to 32(3))',
+/**
+ * FDAP / >27,000 kg. Verified against LN 29: reg 56 is "En-route one engine
+ * inoperative" (a performance limitation), NOT FDAP — the old `REG_56_2`
+ * citation was repealed-2018 numbering. The FDAP-as-part-of-SMS mandate is
+ * stated verbatim in LN 42 ("an operator of an aeroplane with MTOM in excess of
+ * 27 000 kg shall establish and maintain a flight data analysis programme as
+ * part of its safety management system", Safety Programme and Management System
+ * reg, sub-para (2)); use this citation. Aircraft-tracking carries a parallel
+ * >27,000 kg threshold at LN 29 reg 6(2)(a).
+ */
+export const REG_FDAP_LN42: Citation = {
+  instrument: LN_42_2026,
+  subject:
+    'FDAP required as part of the SMS for aeroplanes with MTOM > 27,000 kg (Safety Programme and Management System reg, sub-para (2))',
 };
 
-export const REG_56_2: Citation = {
+/**
+ * Flight recorder records — verified against LN 29 reg 87: the operator shall
+ * preserve flight recorder records after an accident/incident and retain them
+ * "as determined in accordance with the Civil Aviation (Aircraft Accident and
+ * Incidents Investigation) Regulations." The 60-day post-event retention figure
+ * lives in those Accident Investigation Regulations, not in LN 29 reg 18 (which
+ * is "threshold crossing height" — the old reg 18(3)(i) was 2018 numbering).
+ */
+export const REG_87_FLIGHT_RECORDER: Citation = {
   instrument: LN_29_2026,
-  section: '56(2)',
-  subject: 'FDAP mandatory for aircraft > 27,000 kg MTOW',
-};
-
-export const REG_18_3_I: Citation = {
-  instrument: LN_29_2026,
-  section: '18(3)(i)',
-  subject: 'FDR post-event retention 60 days',
+  section: '87',
+  subject:
+    'Preservation of flight recorder records after accident/incident (retention period per the Aircraft Accident & Incidents Investigation Regulations — 60 days)',
 };
 
 export const REG_84: Citation = {
@@ -127,90 +241,168 @@ export const REG_84: Citation = {
 export const REG_84_UNEXTENDED_DEADLINE = '2027-03-06' as const;
 
 /**
- * Sixth Schedule penalty bands.
+ * Sixth Schedule penalty bands — verified verbatim against the LN 42 gazette
+ * (r. 82): a contravention of an "A" provision is liable to a fine not
+ * exceeding one million shillings per offence and/or imprisonment not exceeding
+ * one year; a "B" provision, a fine not exceeding two million shillings per
+ * offence and/or imprisonment not exceeding three years.
  */
 export const SIXTH_SCHEDULE_PENALTIES = {
+  reg: '82',
+  primarySourceVerified: true,
   aClass: { maxFineKsh: 1_000_000, maxImprisonmentYears: 1 },
   bClass: { maxFineKsh: 2_000_000, maxImprisonmentYears: 3 },
   notes:
-    'Operational consequence beyond fines: AOC suspension/revocation exposure, individual licence action.',
+    'Verified against LN 42 r. 82 / Sixth Schedule. Operational consequence beyond fines: AOC suspension/revocation exposure, individual licence action.',
 } as const;
 
 // ----------------------------------------------------------------------------
-// LN 42/2026 Third Schedule structure
+// LN 42/2026 Third Schedule — Operations Manual (rr. 30(1) and 31(2))
 //
-// The Third Schedule contains:
-//   §2.1 — 34 OM content clauses (binding contents list for the operator's
-//          Operations Manual).
-//   §2.2 — 12 mandatory training topics.
-//
-// Clause subjects are populated as primary-source material becomes available
-// (PDF in /docs/regulatory/). Only entries verified against either CLAUDE.md
-// or the original prototype's cross-reference tab appear below.
+// Transcribed from the gazetted notice (Kenya Gazette Supplement No. 52,
+// 6 March 2026). The Schedule's CONTENTS (clause 2) has four sub-sections:
+//   §2.1 General (39) · §2.2 Aircraft operating information (13) ·
+//   §2.3 Routes, aerodromes and heliports (6) · §2.4 Training (3).
+// Subjects below are condensed from the clause text; the clause numbering and
+// section structure match the gazette exactly.
 // ----------------------------------------------------------------------------
 
 export interface ThirdScheduleClause {
   readonly number: number;
   readonly shortRef: string;
-  /** Null when the subject hasn't been verified against the primary-source PDF. */
+  /** Null only if a clause subject is genuinely unverified. */
   readonly subject: string | null;
   readonly pendingPrimarySource: boolean;
   readonly notes?: string;
 }
 
-function buildSectionClauses(
-  prefix: '§2.1' | '§2.2',
-  count: number,
-  known: ReadonlyArray<{ number: number; subject: string; notes?: string }>,
-): ReadonlyArray<ThirdScheduleClause> {
-  const byNumber = new Map(known.map((k) => [k.number, k]));
-  return Array.from({ length: count }, (_unused, i) => {
-    const number = i + 1;
-    const k = byNumber.get(number);
-    if (k) {
-      return {
-        number,
-        shortRef: `${prefix}.${number}`,
-        subject: k.subject,
-        pendingPrimarySource: false,
-        ...(k.notes !== undefined ? { notes: k.notes } : {}),
-      };
-    }
-    return {
-      number,
-      shortRef: `${prefix}.${number}`,
-      subject: null,
-      pendingPrimarySource: true,
-    };
-  });
+export interface ThirdScheduleSection {
+  /** e.g. '§2.1'. */
+  readonly ref: string;
+  readonly title: string;
+  readonly clauses: ReadonlyArray<ThirdScheduleClause>;
 }
 
-export const THIRD_SCHEDULE_SECTION_21_CLAUSES: ReadonlyArray<ThirdScheduleClause> =
-  buildSectionClauses('§2.1', 34, [
-    {
-      number: 25,
-      subject: 'Stabilised approach criteria',
-      notes: 'Operators submit their own gate heights; the regulation does not prescribe values.',
-    },
-  ]);
+function section(
+  ref: string,
+  title: string,
+  subjects: ReadonlyArray<string>,
+  notesByNumber: Readonly<Record<number, string>> = {},
+): ThirdScheduleSection {
+  return {
+    ref,
+    title,
+    clauses: subjects.map((subject, i) => {
+      const number = i + 1;
+      const note = notesByNumber[number];
+      return {
+        number,
+        shortRef: `${ref}.${number}`,
+        subject,
+        pendingPrimarySource: false,
+        ...(note !== undefined ? { notes: note } : {}),
+      };
+    }),
+  };
+}
 
-export const THIRD_SCHEDULE_SECTION_22_TOPICS: ReadonlyArray<ThirdScheduleClause> =
-  buildSectionClauses('§2.2', 12, [{ number: 4, subject: 'Crew Resource Management (CRM)' }]);
+const SECTION_21 = section(
+  '§2.1',
+  'General',
+  [
+    'Responsibilities of each crew member and persons assigned operational control',
+    'Flight and duty time limitations and rest schemes for flight and cabin crew members',
+    'List of navigational equipment to be carried, including performance-based navigation requirements',
+    'Long-range navigation procedures, EDTO engine-failure procedure, and diversion-aerodrome nomination/use',
+    'Circumstances in which a radio listening watch is to be maintained',
+    'Method for determining minimum flight altitudes',
+    'Methods for determining aerodrome operating minima',
+    'Safety precautions during refuelling with passengers on board',
+    'Ground handling arrangements and procedures',
+    'Procedures for pilots-in-command when an accident is observed',
+    'Flight crew for each type of operation, including the succession of command',
+    'Computation of fuel and oil quantities (incl. loss of pressurisation and en-route engine failure)',
+    'Conditions for oxygen use and the amount of oxygen (per the Fourth Schedule of the ANO)',
+    'Instructions for mass and balance control',
+    'Conduct and control of ground de-icing/anti-icing operations',
+    'Specifications for the operational flight plan',
+    'Standard operating procedures (SOP) for each phase of flight',
+    'Use of normal checklists and the timing of their use',
+    'Departure contingency procedures',
+    'Maintenance of altitude awareness and use of automated/flight-crew altitude call-out',
+    'Use of autopilots and auto-throttles in IMC',
+    'Clarification and acceptance of ATC clearances, particularly where terrain clearance is involved',
+    'Departure and approach briefings',
+    'Procedures for familiarisation with areas, routes and aerodromes',
+    'Stabilised approach procedure',
+    'Limitation on high rates of descent near the surface',
+    'Conditions required to commence or to continue an instrument approach',
+    'Conduct of precision and non-precision instrument approach procedures',
+    'Allocation of flight-crew duties and crew-workload management during night/IMC approach and landing',
+    'Training/awareness for avoidance of CFIT and use of GPWS; and upset prevention and recovery',
+    'Avoidance of collisions and use of the airborne collision avoidance system (ACAS)',
+    'Interception of civil aircraft (PIC procedures; visual signals)',
+    'Operations above 49,000 ft (15,000 m): solar cosmic-radiation guidance, descent procedures, dose records',
+    'Safety management system and related flight-safety programmes relevant to flight operations',
+    'Carriage of dangerous goods, including emergency action, labelling/marking, loading and crew responsibilities',
+    'Security instructions and guidance',
+    'Bomb-search checklist and inspection for concealed weapons/explosives; least-risk bomb location',
+    'Use of automatic landing systems, HUD or equivalent displays, and EVS/SVS/CVS equipment',
+    'Use of the electronic flight bag (EFB)',
+  ],
+  {
+    25: 'Operators submit their own gate heights; the regulation does not prescribe values.',
+    2: 'FTL/rest scheme is an OM-content requirement here; numeric limits derive from the operator’s approved scheme.',
+  },
+);
+
+const SECTION_22 = section('§2.2', 'Aircraft operating information', [
+  'Certification limitations and operating limitations',
+  'Normal, abnormal and emergency procedures and checklists used by the flight crew',
+  'Operating instructions and information on climb performance',
+  'Flight planning data for pre-flight and in-flight planning (different thrust/power and speed settings)',
+  'Maximum crosswind and tailwind components per type, with reductions for gusts/visibility/runway/crew/autopilot etc.',
+  'Instructions for aircraft loading and securing of load',
+  'Aircraft systems, associated controls and instructions for their use',
+  'Minimum equipment list (MEL) and configuration deviation list (CDL), incl. PBN requirements',
+  'Checklist of emergency and safety equipment and instructions for their use',
+  'Emergency evacuation procedures (type-specific; crew coordination; emergency positions/duties)',
+  'Normal/abnormal/emergency procedures for cabin crew and flight-/cabin-crew coordination',
+  'Survival and emergency equipment for different routes and pre-take-off verification (incl. oxygen)',
+  'Ground-air visual signal code for use by survivors',
+]);
+
+const SECTION_23 = section('§2.3', 'Routes, aerodromes and heliports', [
+  'Route guide (communications, navigation aids, aerodromes, approaches/arrivals/departures) per flight',
+  'Minimum flight altitudes for each route to be flown',
+  'Aerodrome operating minima for aerodromes of intended landing and alternates',
+  'Increase of aerodrome operating minima on degradation of approach/aerodrome facilities',
+  'Instructions for determining aerodrome operating minima',
+  'Information for flight-profile compliance (take-off/en-route/approach/landing climb & runway length; dry/wet/contaminated; tyre-speed)',
+]);
+
+const SECTION_24 = section('§2.4', 'Training', [
+  'Details of the flight crew training programme',
+  'Details of the cabin crew duties training programme',
+  'Details of the flight operations officer/flight dispatcher training programme (where employed)',
+]);
+
+export const THIRD_SCHEDULE_SECTIONS: ReadonlyArray<ThirdScheduleSection> = [
+  SECTION_21,
+  SECTION_22,
+  SECTION_23,
+  SECTION_24,
+];
+
+/** Back-compatible alias: §2.1 (General) clauses. */
+export const THIRD_SCHEDULE_SECTION_21_CLAUSES = SECTION_21.clauses;
 
 export const THIRD_SCHEDULE = {
   instrument: LN_42_2026,
-  section21: {
-    title: 'OM content list',
-    clauseCount: 34,
-    clauses: THIRD_SCHEDULE_SECTION_21_CLAUSES,
-    knownClauses: THIRD_SCHEDULE_SECTION_21_CLAUSES.filter((c) => !c.pendingPrimarySource),
-  },
-  section22: {
-    title: 'Mandatory training topics',
-    topicCount: 12,
-    clauses: THIRD_SCHEDULE_SECTION_22_TOPICS,
-    knownTopics: THIRD_SCHEDULE_SECTION_22_TOPICS.filter((c) => !c.pendingPrimarySource),
-  },
+  reference: 'rr. 30(1) and 31(2)',
+  title: 'Operations Manual',
+  sections: THIRD_SCHEDULE_SECTIONS,
+  totalClauseCount: THIRD_SCHEDULE_SECTIONS.reduce((n, s) => n + s.clauses.length, 0),
 } as const;
 
 /**

@@ -82,9 +82,11 @@ export interface AircraftTypeProfile {
 }
 
 /**
- * FDAP MTOW threshold is regulatory (KCARs LN 29/2026 Reg 56(2)), not
- * type-specific. Every type with at least one variant > this MTOW must run
- * FDAP. Both F70 and F100 qualify.
+ * FDAP MTOW threshold is regulatory (LN 42/2026 — FDAP as part of the SMS for
+ * aeroplanes > 27,000 kg MTOM; the parallel >27,000 kg threshold also appears
+ * at LN 29/2026 reg 6(2)(a) for aircraft tracking), not type-specific. Every
+ * type with at least one variant > this MTOW must run FDAP. Both F70 and F100
+ * qualify.
  */
 export const FDAP_MTOW_THRESHOLD_KG = AIRCRAFT_FACTS.fdapMtowThresholdKg;
 
@@ -125,7 +127,7 @@ export const F70_100_PROFILE: AircraftTypeProfile = {
         mtowKg: AIRCRAFT_FACTS.variants['F70-HGW'].mtowKg,
         mlwKg: AIRCRAFT_FACTS.variants['F70-HGW'].mlwKg,
         mzfwKg: AIRCRAFT_FACTS.variants['F70-HGW'].mzfwKg,
-        notes: 'Operated by JAK as 5Y-MMB',
+        notes: 'High-Gross-Weight variant; 5Y-MMB is the canonical East African example.',
       },
       {
         key: 'F100',
@@ -168,44 +170,48 @@ export const F70_100_PROFILE: AircraftTypeProfile = {
 };
 
 // ----------------------------------------------------------------------------
-// Embraer E190 — preview profile (proof-of-concept for type-extensibility)
+// Boeing 737NG — preview profile (proof-of-concept for type-extensibility)
 // ----------------------------------------------------------------------------
 //
-// Populated from public Embraer manufacturer specifications. Operational
-// technique and AI calibration are intentionally left to a TRI/TRE qualified
-// on type — the platform refuses to fabricate safety-relevant claims.
+// Populated from public Boeing manufacturer specifications for the 737 Next
+// Generation family (737-600/-700/-800/-900ER). Operational technique and AI
+// calibration are intentionally left to a TRI/TRE qualified on type — the
+// platform refuses to fabricate safety-relevant claims. Maximum take-off
+// weight figures vary by Boeing-offered weight option; values below are the
+// commonly-published nominal MTOW and must be verified against the operator's
+// OpSpec / AFM before promotion to production-ready.
 //
-// Common East African operators: Kenya Airways (subsidiary fleet), Jambojet
-// (currently 737s but E190s have appeared on the route map), RwandAir.
+// Common East African operators of the 737NG: Kenya Airways (737-700/-800),
+// Jambojet, Air Tanzania, RwandAir.
 // ----------------------------------------------------------------------------
 
-export const E190_PROFILE_ID = 'E190' as AircraftTypeProfileId;
+export const B737_PROFILE_ID = 'B737' as AircraftTypeProfileId;
 
-export const E190_PROFILE: AircraftTypeProfile = {
-  id: E190_PROFILE_ID,
-  shortLabel: 'E190',
-  longLabel: 'Embraer 190 (E-Jet)',
+export const B737_PROFILE: AircraftTypeProfile = {
+  id: B737_PROFILE_ID,
+  shortLabel: 'B737',
+  longLabel: 'Boeing 737 Next Generation (737NG)',
   status: 'preview',
   manufacturerFacts: {
-    engineDesignation: 'General Electric CF34-10E',
+    engineDesignation: 'CFM International CFM56-7B',
     variants: [
       {
-        key: 'E190-STD',
-        label: 'E190 (standard)',
-        mtowKg: 47_790,
-        notes: 'Public Embraer spec; verify per operator OpSpec before deployment.',
+        key: 'B737-700',
+        label: '737-700',
+        mtowKg: 70_080,
+        notes: 'Public Boeing spec (nominal MTOW); verify per operator OpSpec before deployment.',
       },
       {
-        key: 'E190-LR',
-        label: 'E190 LR (long range)',
-        mtowKg: 50_300,
-        notes: 'Public Embraer spec; verify per operator OpSpec before deployment.',
+        key: 'B737-800',
+        label: '737-800',
+        mtowKg: 79_015,
+        notes: 'Public Boeing spec (nominal MTOW); verify per operator OpSpec before deployment.',
       },
       {
-        key: 'E190-AR',
-        label: 'E190 AR (advanced range)',
-        mtowKg: 51_800,
-        notes: 'Public Embraer spec; verify per operator OpSpec before deployment.',
+        key: 'B737-900ER',
+        label: '737-900ER',
+        mtowKg: 85_139,
+        notes: 'Public Boeing spec (nominal MTOW); verify per operator OpSpec before deployment.',
       },
     ],
   },
@@ -214,15 +220,123 @@ export const E190_PROFILE: AircraftTypeProfile = {
     notes:
       'Operational profile (takeoff flap policy, OEI technique, fuel asymmetry limits, ' +
       'landing flap selection) must be populated from the operator OM-B and AFM by a ' +
-      'TRI/TRE qualified on type before this profile is promoted to production-ready.',
+      'TRI/TRE qualified on type before this profile is promoted to production-ready. ' +
+      'The 737 MAX (CFM LEAP-1B) is a distinct type rating and is not covered by this profile.',
   },
   aiCalibration: {
     examinerRoleDescription:
-      'You are a Type Rating Examiner (TRE) for the Embraer 190, working within the ' +
-      'regulatory framework of KCARs 2025 cross-referenced to ICAO, FAA, and EASA.',
+      'You are a Type Rating Examiner (TRE) for the Boeing 737 Next Generation, working ' +
+      'within the regulatory framework of KCARs 2025 cross-referenced to ICAO, FAA, and EASA.',
     pendingPrimarySource: true,
   },
 };
+
+// ----------------------------------------------------------------------------
+// Draft registry stubs — common Kenyan-registry types.
+//
+// These exist so the type selector lists the fleet an East African operator
+// actually flies. They carry ONLY public manufacturer facts (engine, nominal
+// MTOW — flagged "verify per operator OpSpec/AFM"); operational technique and
+// AI calibration are pendingPrimarySource and MUST be populated by a TRI/TRE
+// qualified on type (a Phase-1 content task) before any promotion. The
+// platform refuses to fabricate safety-relevant claims (CLAUDE.md).
+// MTOW figures are nominal public specs; their only computed use here is the
+// FDAP >27,000 kg flag, where every value sits well clear of the threshold.
+// ----------------------------------------------------------------------------
+
+function draftStub(args: {
+  id: string;
+  shortLabel: string;
+  longLabel: string;
+  engineDesignation: string;
+  variants: ReadonlyArray<AircraftVariant>;
+  examinerType: string;
+}): AircraftTypeProfile {
+  return {
+    id: args.id as AircraftTypeProfileId,
+    shortLabel: args.shortLabel,
+    longLabel: args.longLabel,
+    status: 'draft',
+    manufacturerFacts: {
+      engineDesignation: args.engineDesignation,
+      variants: args.variants,
+    },
+    operationalProfile: {
+      pendingPrimarySource: true,
+      notes:
+        'Draft stub — operational profile (flap policy, OEI technique, fuel asymmetry, ' +
+        'landing flaps, approach-speed source) to be populated from the operator OM-B/AFM by a ' +
+        'TRI/TRE qualified on type before any promotion. No technique is asserted.',
+    },
+    aiCalibration: {
+      examinerRoleDescription: `You are a Type Rating Examiner (TRE) for the ${args.examinerType}, working within the regulatory framework of KCARs 2025 cross-referenced to ICAO, FAA, and EASA.`,
+      pendingPrimarySource: true,
+    },
+  };
+}
+
+const vNote = 'Public nominal spec; verify per operator OpSpec/AFM before deployment.';
+
+export const B737_CLASSIC_PROFILE = draftStub({
+  id: 'B737_CLASSIC',
+  shortLabel: 'B737 Classic',
+  longLabel: 'Boeing 737 Classic (300/400/500)',
+  engineDesignation: 'CFM International CFM56-3',
+  examinerType: 'Boeing 737 Classic (300/400/500)',
+  variants: [
+    { key: 'B737-300', label: '737-300', mtowKg: 56_470, notes: vNote },
+    { key: 'B737-400', label: '737-400', mtowKg: 68_040, notes: vNote },
+    { key: 'B737-500', label: '737-500', mtowKg: 60_550, notes: vNote },
+  ],
+});
+
+export const C208_PROFILE = draftStub({
+  id: 'C208',
+  shortLabel: 'C208',
+  longLabel: 'Cessna 208 Caravan / 208B Grand Caravan',
+  engineDesignation: 'Pratt & Whitney Canada PT6A-114A',
+  examinerType: 'Cessna 208 Caravan',
+  variants: [
+    { key: 'C208', label: '208 Caravan', mtowKg: 3_629, notes: vNote },
+    { key: 'C208B', label: '208B Grand Caravan', mtowKg: 3_995, notes: vNote },
+  ],
+});
+
+export const DHC8_PROFILE = draftStub({
+  id: 'DHC8',
+  shortLabel: 'DHC-8',
+  longLabel: 'De Havilland Canada Dash 8 / Q400',
+  engineDesignation: 'Pratt & Whitney Canada PW123 / PW150A',
+  examinerType: 'Dash 8 / Q400',
+  variants: [
+    { key: 'DHC8-300', label: 'Dash 8-300', mtowKg: 19_505, notes: vNote },
+    { key: 'DHC8-400', label: 'Q400 (Dash 8-400)', mtowKg: 29_574, notes: vNote },
+  ],
+});
+
+export const ATR_PROFILE = draftStub({
+  id: 'ATR',
+  shortLabel: 'ATR 42/72',
+  longLabel: 'ATR 42 / ATR 72',
+  engineDesignation: 'Pratt & Whitney Canada PW127',
+  examinerType: 'ATR 42/72',
+  variants: [
+    { key: 'ATR42-600', label: 'ATR 42-600', mtowKg: 18_600, notes: vNote },
+    { key: 'ATR72-600', label: 'ATR 72-600', mtowKg: 23_000, notes: vNote },
+  ],
+});
+
+export const EJET_PROFILE = draftStub({
+  id: 'EJET',
+  shortLabel: 'E170/190',
+  longLabel: 'Embraer E-Jets (E170 / E190)',
+  engineDesignation: 'General Electric CF34-8E / CF34-10E',
+  examinerType: 'Embraer E-Jets (E170/E190)',
+  variants: [
+    { key: 'E170', label: 'E170', mtowKg: 37_200, notes: vNote },
+    { key: 'E190', label: 'E190', mtowKg: 51_800, notes: vNote },
+  ],
+});
 
 // ----------------------------------------------------------------------------
 // Registry
@@ -230,7 +344,12 @@ export const E190_PROFILE: AircraftTypeProfile = {
 
 export const AIRCRAFT_TYPE_PROFILES: ReadonlyArray<AircraftTypeProfile> = [
   F70_100_PROFILE,
-  E190_PROFILE,
+  B737_PROFILE,
+  B737_CLASSIC_PROFILE,
+  C208_PROFILE,
+  DHC8_PROFILE,
+  ATR_PROFILE,
+  EJET_PROFILE,
 ];
 
 const _PROFILES_BY_ID = new Map<AircraftTypeProfileId, AircraftTypeProfile>(

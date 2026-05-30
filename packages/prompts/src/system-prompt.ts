@@ -6,9 +6,8 @@ import {
   LN_29_2026,
   LN_42_2026,
   REG_17_3,
-  REG_32_3,
-  REG_38_3,
-  REG_56_2,
+  REG_15_2,
+  REG_FDAP_LN42,
   formatCitation,
 } from '@dnca/ontology';
 
@@ -17,7 +16,7 @@ import {
  *
  * The block is now built per-AircraftTypeProfile. The F70/100 profile
  * produces the same block the platform shipped with originally (ADR 0006
- * preserves this invariant). Preview profiles (E190 et al.) that have
+ * preserves this invariant). Preview profiles (B737 et al.) that have
  * not yet been populated by a TRI/TRE produce a generic examiner role
  * without inventing type-specific technical claims.
  *
@@ -65,13 +64,13 @@ ${op.notes ? `\n${op.notes}\n` : ''}
 # Regulatory anchors that must be cited correctly
 
 - ${formatCitation(REG_17_3)} — 30-day pre-implementation submission window
-- ${formatCitation(REG_32_3)} and ${formatCitation(REG_38_3)} — Human Factors
-  statutory for checklist design
-- ${formatCitation(REG_56_2)} — FDAP mandatory for aircraft > 27,000 kg MTOW
+- ${formatCitation(REG_15_2)} — Human Factors principles statutory for checklist design
+- ${formatCitation(REG_FDAP_LN42)} — FDAP mandatory for aircraft > 27,000 kg MTOW
 - ${formatCitation({
     instrument: LN_42_2026,
     section: 'Third Schedule',
-    subject: 'Binding OM content list (§2.1 — 34 clauses; §2.2 — 12 mandatory training topics)',
+    subject:
+      'Binding OM content list — §2.1 General (39), §2.2 Aircraft operating information (13), §2.3 Routes/aerodromes (6), §2.4 Training (3)',
   })}
 - ${formatCitation({ instrument: EASA_AMC1_ORO_FC_220 })} and
   ${formatCitation({ instrument: EASA_AMC1_ORO_FC_230 })} — conversion and
@@ -113,7 +112,7 @@ code fences. The array contains exactly five objects matching:
     "options": ["A", "B", "C", "D"],
     "correctIndex": 0 | 1 | 2 | 3,
     "explanation": "string with reasoning + distractor analysis",
-    "primarySourceCitation": "string e.g. 'KCARs LN 42/2026 §2.2.4', 'ICAO Doc 9868 §4.5.1', 'AFM §3.05.10', 'QRH ENG-FIRE'"
+    "primarySourceCitation": "string e.g. 'KCARs LN 42/2026 Third Schedule §2.1.25', 'ICAO Doc 9868 §4.5.1', 'AFM §3.05.10', 'QRH ENG-FIRE'"
   },
   ... 4 more ...
 ]
@@ -159,8 +158,8 @@ ${profile.manufacturerFacts.variants
 # Regulatory anchors
 
 - ${formatCitation(REG_17_3)} — 30-day pre-implementation submission
-- ${formatCitation(REG_32_3)} — Human Factors in checklist design
-- ${formatCitation(REG_56_2)} — FDAP mandatory > 27,000 kg MTOW
+- ${formatCitation(REG_15_2)} — Human Factors in checklist design
+- ${formatCitation(REG_FDAP_LN42)} — FDAP mandatory > 27,000 kg MTOW
 - ${formatCitation({
     instrument: LN_42_2026,
     section: 'Third Schedule',

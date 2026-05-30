@@ -42,7 +42,12 @@ export function createDatabase(opts: CreateDatabaseOptions): CreatedDatabase {
  */
 export async function setOperatorScope(db: Database, operatorId: string | null): Promise<void> {
   if (operatorId === null) {
-    await db.execute(`RESET app.operator_id`);
+    // Transaction-local clear. RESET is *session*-scoped — on a pooled
+    // connection it persists past COMMIT and leaks the unscoped state into the
+    // next checkout. Empty string + the NULLIF in current_operator_id() yields
+    // NULL (fail-closed: tenant tables see zero rows), and SET LOCAL reverts at
+    // transaction end like the scoped branch below.
+    await db.execute(`SET LOCAL app.operator_id = ''`);
     return;
   }
   await db.execute(`SET LOCAL app.operator_id = '${escapeUuid(operatorId)}'`);

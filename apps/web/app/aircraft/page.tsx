@@ -7,6 +7,7 @@ import {
   tryGetAircraftTypeProfile,
   type AircraftTypeProfile,
 } from '@dnca/domain';
+import { TypeSwitcher } from './_components/type-switcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +37,14 @@ export default async function AircraftPage({ searchParams }: PageProps) {
             are operator OM-B / TRI-TRE territory.
           </p>
         </div>
-        <TypeSwitcher selected={profile.id} />
+        <TypeSwitcher
+          selected={profile.id}
+          options={AIRCRAFT_TYPE_PROFILES.map((p) => ({
+            id: p.id,
+            label: p.shortLabel,
+            status: p.status,
+          }))}
+        />
       </header>
 
       <StatusBanner profile={profile} />
@@ -203,30 +211,6 @@ function StatusBanner({ profile }: { profile: AircraftTypeProfile }) {
       <strong>Preview profile.</strong> Manufacturer facts are populated from public spec; the
       operational profile and AI calibration are pending population by a TRI/TRE qualified on type.
       Promote to production-ready during Phase 1 of an operator deployment.
-    </div>
-  );
-}
-
-function TypeSwitcher({ selected }: { selected: string }) {
-  return (
-    <div className="flex shrink-0 flex-col gap-1">
-      <span className="text-[10px] uppercase tracking-wide text-slate-500">Aircraft type</span>
-      <div className="flex flex-wrap gap-1">
-        {AIRCRAFT_TYPE_PROFILES.map((p) => (
-          <Link
-            key={p.id}
-            href={`/aircraft?typeId=${p.id}`}
-            className={`rounded border px-2 py-1 text-xs ${
-              p.id === selected
-                ? 'border-navy-700 bg-navy-900 text-white'
-                : 'border-slate-300 bg-white text-slate-700 hover:border-navy-300'
-            }`}
-          >
-            {p.shortLabel}
-            {p.status !== 'production-ready' ? ' (preview)' : ''}
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

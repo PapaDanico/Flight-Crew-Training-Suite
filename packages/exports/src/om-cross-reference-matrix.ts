@@ -1,9 +1,5 @@
 import type { IsoDate, OmCrossReferenceMapping, Operator } from '@dnca/domain';
-import {
-  THIRD_SCHEDULE_SECTION_21_CLAUSES,
-  THIRD_SCHEDULE_SECTION_22_TOPICS,
-  type ThirdScheduleClause,
-} from '@dnca/ontology';
+import { THIRD_SCHEDULE_SECTIONS, type ThirdScheduleClause } from '@dnca/ontology';
 
 /**
  * OM Cross-Reference Matrix — operator's attestation that every binding
@@ -11,10 +7,9 @@ import {
  * KCAA expects with a Reg 17(3) submission.
  *
  * Each row is one Third Schedule clause + either the operator's mapping
- * (OM section + evidence) OR a "not yet mapped" placeholder. Each row also
- * carries the clause's `pendingPrimarySource` flag from @dnca/ontology so
- * the page can distinguish "we don't know the clause subject yet" from
- * "we know the subject but the operator hasn't mapped it".
+ * (OM section + evidence) OR a "not yet mapped" placeholder. The Schedule has
+ * four sub-sections (§2.1 General, §2.2 Aircraft operating information,
+ * §2.3 Routes/aerodromes, §2.4 Training); the matrix iterates them all.
  */
 
 export interface OmCrossReferenceMatrixInput {
@@ -38,18 +33,21 @@ export interface OmMatrixSectionTotals {
   unmapped: number;
 }
 
+export interface OmMatrixSection {
+  ref: string;
+  title: string;
+  rows: ReadonlyArray<OmMatrixRow>;
+  totals: OmMatrixSectionTotals;
+}
+
 export interface OmCrossReferenceMatrixData {
   operator: Operator;
   asOf: IsoDate;
   generatedAt: Date;
   generatedByUserName: string | null;
   documentTitle: string;
-  section21: ReadonlyArray<OmMatrixRow>;
-  section22: ReadonlyArray<OmMatrixRow>;
-  totals: {
-    section21: OmMatrixSectionTotals;
-    section22: OmMatrixSectionTotals;
-  };
+  sections: ReadonlyArray<OmMatrixSection>;
+  overall: OmMatrixSectionTotals;
 }
 
 function totalsFor(rows: ReadonlyArray<OmMatrixRow>): OmMatrixSectionTotals {
@@ -68,6 +66,19 @@ function totalsFor(rows: ReadonlyArray<OmMatrixRow>): OmMatrixSectionTotals {
   };
 }
 
+function sumTotals(parts: ReadonlyArray<OmMatrixSectionTotals>): OmMatrixSectionTotals {
+  return parts.reduce<OmMatrixSectionTotals>(
+    (acc, t) => ({
+      total: acc.total + t.total,
+      subjectVerified: acc.subjectVerified + t.subjectVerified,
+      subjectPending: acc.subjectPending + t.subjectPending,
+      mapped: acc.mapped + t.mapped,
+      unmapped: acc.unmapped + t.unmapped,
+    }),
+    { total: 0, subjectVerified: 0, subjectPending: 0, mapped: 0, unmapped: 0 },
+  );
+}
+
 export function buildOmCrossReferenceMatrix(
   input: OmCrossReferenceMatrixInput,
 ): OmCrossReferenceMatrixData {
@@ -77,14 +88,13 @@ export function buildOmCrossReferenceMatrix(
     mappingsByRef.set(m.clauseShortRef, m);
   }
 
-  const buildRows = (clauses: ReadonlyArray<ThirdScheduleClause>): ReadonlyArray<OmMatrixRow> =>
-    clauses.map((clause) => ({
+  const sections: OmMatrixSection[] = THIRD_SCHEDULE_SECTIONS.map((s) => {
+    const rows: OmMatrixRow[] = s.clauses.map((clause) => ({
       clause,
       mapping: mappingsByRef.get(clause.shortRef) ?? null,
     }));
-
-  const section21 = buildRows(THIRD_SCHEDULE_SECTION_21_CLAUSES);
-  const section22 = buildRows(THIRD_SCHEDULE_SECTION_22_TOPICS);
+    return { ref: s.ref, title: s.title, rows, totals: totalsFor(rows) };
+  });
 
   return {
     operator: input.operator,
@@ -92,12 +102,8 @@ export function buildOmCrossReferenceMatrix(
     generatedAt: input.generatedAt,
     generatedByUserName: input.generatedByUserName ?? null,
     documentTitle: `OM Cross-Reference Matrix — ${input.operator.tradingName}`,
-    section21,
-    section22,
-    totals: {
-      section21: totalsFor(section21),
-      section22: totalsFor(section22),
-    },
+    sections,
+    overall: sumTotals(sections.map((s) => s.totals)),
   };
 }
 

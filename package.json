@@ -1,8 +1,8 @@
 {
-  "name": "fokker-70-100-flight-crew-training-suite",
+  "name": "dnca-flight-crew-training-suite",
   "version": "0.0.1",
   "private": true,
-  "description": "Multi-tenant Fokker 70/100 flight crew training management platform — DN Consultancy Aviation",
+  "description": "Multi-tenant flight crew training management platform — DN Consultancy Aviation",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=22"

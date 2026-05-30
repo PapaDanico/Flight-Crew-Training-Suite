@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   AIRCRAFT_TYPE_PROFILES,
-  E190_PROFILE,
+  B737_PROFILE,
   F70_100_PROFILE,
   FDAP_MTOW_THRESHOLD_KG,
   getAircraftTypeProfile,
@@ -12,10 +12,10 @@ import {
 } from '../src/index.js';
 
 describe('AircraftTypeProfile registry', () => {
-  it('contains F70/100 and E190', () => {
+  it('contains F70/100 and B737', () => {
     assert.equal(AIRCRAFT_TYPE_PROFILES.length >= 2, true);
     assert.ok(AIRCRAFT_TYPE_PROFILES.includes(F70_100_PROFILE));
-    assert.ok(AIRCRAFT_TYPE_PROFILES.includes(E190_PROFILE));
+    assert.ok(AIRCRAFT_TYPE_PROFILES.includes(B737_PROFILE));
   });
 
   it('all profile ids are unique', () => {
@@ -26,7 +26,7 @@ describe('AircraftTypeProfile registry', () => {
 
   it('getAircraftTypeProfile resolves known ids', () => {
     assert.equal(getAircraftTypeProfile(F70_100_PROFILE.id), F70_100_PROFILE);
-    assert.equal(getAircraftTypeProfile(E190_PROFILE.id), E190_PROFILE);
+    assert.equal(getAircraftTypeProfile(B737_PROFILE.id), B737_PROFILE);
   });
 
   it('tryGetAircraftTypeProfile returns undefined for unknown ids', () => {
@@ -63,26 +63,76 @@ describe('F70/100 profile (production-ready)', () => {
   });
 });
 
-describe('E190 profile (preview)', () => {
+describe('B737 profile (preview)', () => {
   it('is marked preview with pending-source flags set', () => {
-    assert.equal(E190_PROFILE.status, 'preview');
-    assert.equal(isProductionReady(E190_PROFILE), false);
-    assert.equal(E190_PROFILE.operationalProfile.pendingPrimarySource, true);
-    assert.equal(E190_PROFILE.aiCalibration.pendingPrimarySource, true);
+    assert.equal(B737_PROFILE.status, 'preview');
+    assert.equal(isProductionReady(B737_PROFILE), false);
+    assert.equal(B737_PROFILE.operationalProfile.pendingPrimarySource, true);
+    assert.equal(B737_PROFILE.aiCalibration.pendingPrimarySource, true);
   });
 
   it('has public manufacturer facts populated', () => {
-    assert.match(E190_PROFILE.manufacturerFacts.engineDesignation, /CF34-10E/);
-    assert.ok(E190_PROFILE.manufacturerFacts.variants.length >= 1);
+    assert.match(B737_PROFILE.manufacturerFacts.engineDesignation, /CFM56-7B/);
+    assert.ok(B737_PROFILE.manufacturerFacts.variants.length >= 1);
   });
 
   it('omits operational technique (refuses to fabricate)', () => {
-    assert.equal(E190_PROFILE.operationalProfile.oei, undefined);
-    assert.equal(E190_PROFILE.operationalProfile.maxFuelAsymmetryKgEnroute, undefined);
-    assert.equal(E190_PROFILE.operationalProfile.takeoffFlapPolicy, undefined);
+    assert.equal(B737_PROFILE.operationalProfile.oei, undefined);
+    assert.equal(B737_PROFILE.operationalProfile.maxFuelAsymmetryKgEnroute, undefined);
+    assert.equal(B737_PROFILE.operationalProfile.takeoffFlapPolicy, undefined);
   });
 
   it('omits AI technicalFactsBlock (refuses to invent)', () => {
-    assert.equal(E190_PROFILE.aiCalibration.technicalFactsBlock, undefined);
+    assert.equal(B737_PROFILE.aiCalibration.technicalFactsBlock, undefined);
+  });
+});
+
+describe('Kenyan-registry draft stubs', () => {
+  const DRAFT_IDS = ['B737_CLASSIC', 'C208', 'DHC8', 'ATR', 'EJET'];
+
+  it('registers the common Kenyan-registry types', () => {
+    for (const id of DRAFT_IDS) {
+      assert.ok(tryGetAircraftTypeProfile(id), `${id} must be in the registry`);
+    }
+  });
+
+  it('every draft stub is draft, not production-ready, with pending technique + AI', () => {
+    for (const id of DRAFT_IDS) {
+      const p = getAircraftTypeProfile(tryGetAircraftTypeProfile(id)!.id);
+      assert.equal(p.status, 'draft', `${id} must be draft`);
+      assert.equal(isProductionReady(p), false);
+      // Refuses to fabricate safety-relevant content until SME-calibrated.
+      assert.equal(p.operationalProfile.pendingPrimarySource, true);
+      assert.equal(p.operationalProfile.oei, undefined);
+      assert.equal(p.operationalProfile.takeoffFlapPolicy, undefined);
+      assert.equal(p.aiCalibration.pendingPrimarySource, true);
+      assert.equal(p.aiCalibration.technicalFactsBlock, undefined);
+      assert.ok(p.manufacturerFacts.engineDesignation.length > 0);
+    }
+  });
+
+  it('computes the FDAP flag correctly from public MTOW (Q400/E-Jets yes, C208/ATR no)', () => {
+    assert.equal(
+      profileExceedsFdapThreshold(getAircraftTypeProfile(tryGetAircraftTypeProfile('DHC8')!.id)),
+      true,
+    );
+    assert.equal(
+      profileExceedsFdapThreshold(getAircraftTypeProfile(tryGetAircraftTypeProfile('EJET')!.id)),
+      true,
+    );
+    assert.equal(
+      profileExceedsFdapThreshold(
+        getAircraftTypeProfile(tryGetAircraftTypeProfile('B737_CLASSIC')!.id),
+      ),
+      true,
+    );
+    assert.equal(
+      profileExceedsFdapThreshold(getAircraftTypeProfile(tryGetAircraftTypeProfile('C208')!.id)),
+      false,
+    );
+    assert.equal(
+      profileExceedsFdapThreshold(getAircraftTypeProfile(tryGetAircraftTypeProfile('ATR')!.id)),
+      false,
+    );
   });
 });

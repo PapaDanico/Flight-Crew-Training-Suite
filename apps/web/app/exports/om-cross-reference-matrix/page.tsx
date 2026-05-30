@@ -36,7 +36,7 @@ export default async function OmCrossReferenceMatrixPage({ searchParams }: PageP
             <div>
               <h1 className="text-lg font-bold text-navy-900">DN Consultancy Aviation</h1>
               <div className="text-[10px] text-slate-600">
-                Fokker 70/100 Flight Crew Training Suite · KCARs 2025-aligned
+                Flight Crew Training Suite · KCARs 2025-aligned
               </div>
             </div>
             <div className="text-right">
@@ -52,7 +52,7 @@ export default async function OmCrossReferenceMatrixPage({ searchParams }: PageP
             <Meta label="Accountable Manager" value={data.operator.accountableManagerName} />
             <Meta
               label="Submission status"
-              value={`§2.1: ${data.totals.section21.mapped}/${data.totals.section21.total} mapped · §2.2: ${data.totals.section22.mapped}/${data.totals.section22.total} mapped`}
+              value={`${data.overall.mapped}/${data.overall.total} Third Schedule clauses mapped across §2.1–§2.4`}
             />
           </section>
 
@@ -66,17 +66,14 @@ export default async function OmCrossReferenceMatrixPage({ searchParams }: PageP
             against the gazetted PDF — to be completed before this matrix is submitted.
           </section>
 
-          <Section
-            title="§2.1 — Operations Manual content list"
-            subtitle={`${data.totals.section21.total} binding clauses · ${data.totals.section21.subjectVerified} subject-verified · ${data.totals.section21.mapped} mapped to OM`}
-            rows={data.section21}
-          />
-
-          <Section
-            title="§2.2 — Mandatory training topics"
-            subtitle={`${data.totals.section22.total} topics · ${data.totals.section22.subjectVerified} subject-verified · ${data.totals.section22.mapped} mapped to OM`}
-            rows={data.section22}
-          />
+          {data.sections.map((s) => (
+            <Section
+              key={s.ref}
+              title={`${s.ref} — ${s.title}`}
+              subtitle={`${s.totals.total} binding clauses · ${s.totals.subjectVerified} subject-verified · ${s.totals.mapped} mapped to OM`}
+              rows={s.rows}
+            />
+          ))}
 
           <footer className="mt-8 border-t border-slate-200 pt-3 text-[9px] text-slate-500">
             <div>

@@ -3,7 +3,7 @@ import type { AircraftId, FleetId, IsoDate, OperatorId } from './branded.js';
 export const AIRCRAFT_TYPE = ['F70', 'F100'] as const;
 export type AircraftType = (typeof AIRCRAFT_TYPE)[number];
 
-export const FLEET_VARIANT = ['F70', 'F70-HGW', 'F100'] as const;
+export const FLEET_VARIANT = ['F70', 'F70-HGW', 'F100', 'B737'] as const;
 export type FleetVariant = (typeof FLEET_VARIANT)[number];
 
 export interface Fleet {
@@ -33,7 +33,10 @@ export interface Aircraft {
  *
  * Both F70 and F100 share the RR Tay Mk.620-15 engine and AlliedSignal GTCP36-150-RR APU.
  * Three independent hydraulic systems (1, 2, 3).
- * 5Y-MMB is the HGW variant operated by Jubba Airways Kenya.
+ * 5Y-MMB is the real-world HGW variant operated by Jubba Airways Kenya; the
+ * demo fixtures assign the F70/100 production-ready demo to I-Fly Air Solutions
+ * (with JAK as the B737NG type-extensibility preview demo) — see
+ * packages/domain/src/fixtures.ts.
  *
  * Source: CLAUDE.md §"Critical F70/100 technical facts"; values must remain authoritative.
  */

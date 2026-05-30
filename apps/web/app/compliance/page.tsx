@@ -1,5 +1,6 @@
 import {
   DOMAIN_CROSS_REFERENCE,
+  KCARS_2025_ALL_INSTRUMENTS,
   SIXTH_SCHEDULE_PENALTIES,
   THIRD_SCHEDULE,
   formatCitation,
@@ -53,25 +54,21 @@ export default function CompliancePage() {
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-lg border border-slate-200 bg-white p-5">
           <h3 className="text-sm font-semibold text-navy-900">LN 42/2026 Third Schedule</h3>
-          <p className="mt-1 text-xs text-slate-600">{THIRD_SCHEDULE.section21.title}</p>
-          <p className="mt-3 text-sm text-slate-700">
-            <strong>§2.1</strong> — {THIRD_SCHEDULE.section21.clauseCount} OM content clauses.{' '}
-            {THIRD_SCHEDULE.section21.knownClauses.length} populated from verified sources;
-            remainder awaits the primary-source PDF.
+          <p className="mt-1 text-xs text-slate-600">
+            {THIRD_SCHEDULE.title} ({THIRD_SCHEDULE.reference}) — {THIRD_SCHEDULE.totalClauseCount}{' '}
+            binding clauses, transcribed from the gazetted notice.
           </p>
-          <p className="mt-2 text-sm text-slate-700">
-            <strong>§2.2</strong> — {THIRD_SCHEDULE.section22.topicCount} mandatory training topics.{' '}
-            {THIRD_SCHEDULE.section22.knownTopics.length} populated.
+          <ul className="mt-3 space-y-1 text-sm text-slate-700">
+            {THIRD_SCHEDULE.sections.map((s) => (
+              <li key={s.ref}>
+                <strong>{s.ref}</strong> {s.title} — {s.clauses.length} clauses
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-slate-600">
+            Key clauses: §2.1.2 flight &amp; duty time / rest scheme · §2.1.25 stabilised approach ·
+            §2.1.30 CFIT/GPWS &amp; UPRT · §2.1.35 dangerous goods · §2.4 training programmes.
           </p>
-          {THIRD_SCHEDULE.section21.knownClauses.length > 0 ? (
-            <ul className="mt-3 space-y-1 text-xs text-slate-600">
-              {THIRD_SCHEDULE.section21.knownClauses.map((c) => (
-                <li key={c.shortRef}>
-                  <strong>{c.shortRef}</strong> — {c.subject}
-                </li>
-              ))}
-            </ul>
-          ) : null}
           <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-200 pt-3">
             <span className="text-[10px] text-slate-500">Submission attestation:</span>
             <a
@@ -89,6 +86,30 @@ export default function CompliancePage() {
               className="rounded border border-navy-300 bg-white px-2 py-1 text-[10px] font-medium text-navy-900 hover:bg-navy-50"
             >
               OM Matrix — I-Fly Demo
+            </a>
+            <a
+              href="/exports/kcaa-transmittal"
+              target="_blank"
+              rel="noopener"
+              className="rounded border border-amber-400 bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-900 hover:bg-amber-100"
+            >
+              KCAA Transmittal (Reg 17(3))
+            </a>
+            <a
+              href="/exports/compliance-evidence-pack"
+              target="_blank"
+              rel="noopener"
+              className="rounded border border-navy-400 bg-navy-50 px-2 py-1 text-[10px] font-medium text-navy-900 hover:bg-navy-100"
+            >
+              Compliance Evidence Pack
+            </a>
+            <a
+              href="/documents/diff"
+              target="_blank"
+              rel="noopener"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-[10px] font-medium text-slate-700 hover:bg-slate-50"
+            >
+              OM-A version diff (Rev 6→7)
             </a>
           </div>
         </div>
@@ -112,8 +133,74 @@ export default function CompliancePage() {
           </p>
         </div>
       </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">
+          KCARs 2025 source provenance
+        </h2>
+        <p className="mb-3 max-w-3xl text-xs text-slate-600">
+          Verification state of each cited Legal Notice against the authoritative primary source —
+          the gazette PDF on file or the official Kenya Law record. A{' '}
+          <span className="font-semibold text-emerald-800">verified</span> row links to its Kenya
+          Law URN; a <span className="font-semibold text-amber-800">provisional</span> instrument
+          (none at present) is badged wherever it is cited until its source is confirmed.
+        </p>
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-slate-200">
+              {KCARS_2025_ALL_INSTRUMENTS.map((i) => (
+                <tr key={i.instrumentId} className="hover:bg-slate-50">
+                  <td className="w-28 px-3 py-2 align-top font-medium text-navy-900">
+                    {i.authoritativeUrl ? (
+                      <a
+                        href={i.authoritativeUrl}
+                        target="_blank"
+                        rel="noopener"
+                        className="text-navy-700 underline decoration-dotted hover:text-navy-900"
+                      >
+                        {i.shortLabel}
+                      </a>
+                    ) : (
+                      i.shortLabel
+                    )}
+                    {i.effectiveDate ? (
+                      <div className="text-[10px] font-normal text-slate-400">
+                        eff. {i.effectiveDate}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    {i.primarySourceVerified ? (
+                      <span className="rounded bg-emerald-100 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+                        verified
+                      </span>
+                    ) : (
+                      <span className="rounded bg-amber-100 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                        provisional
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 align-top text-xs text-slate-600">
+                    {i.longLabel.replace(/^Legal Notice \d+ of 2026 — /, '')}
+                    {i.notes ? <div className="mt-0.5 text-slate-400">{i.notes}</div> : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
+}
+
+/**
+ * A KCARs citation is "provisional" when its instrument has not been confirmed
+ * against the gazetted primary source on file. Inspector-facing surfaces badge
+ * these so an unverified LN number is never presented as settled fact.
+ */
+function isProvisional(c: Citation): boolean {
+  return c.instrument.framework === 'KCARs' && c.instrument.primarySourceVerified !== true;
 }
 
 function CitationCell({ citations }: { citations: ReadonlyArray<Citation> }) {
@@ -122,10 +209,32 @@ function CitationCell({ citations }: { citations: ReadonlyArray<Citation> }) {
       <div className="space-y-1">
         {citations.map((c, idx) => (
           <div key={idx} className="text-xs">
-            <span className="font-medium">{c.instrument.shortLabel}</span>
+            {c.instrument.authoritativeUrl ? (
+              <a
+                href={c.instrument.authoritativeUrl}
+                target="_blank"
+                rel="noopener"
+                className="font-medium text-navy-700 underline decoration-dotted hover:text-navy-900"
+              >
+                {c.instrument.shortLabel}
+              </a>
+            ) : (
+              <span className="font-medium">{c.instrument.shortLabel}</span>
+            )}
             {c.section ? <span> {c.section}</span> : null}
+            {isProvisional(c) ? (
+              <span
+                title="Provisional — not yet confirmed against the gazetted primary source on file"
+                className="ml-1 rounded bg-amber-100 px-1 text-[9px] font-semibold uppercase tracking-wide text-amber-800"
+              >
+                provisional
+              </span>
+            ) : null}
             {c.subject ? <div className="text-slate-500">{c.subject}</div> : null}
-            <div className="sr-only">{formatCitation(c)}</div>
+            <div className="sr-only">
+              {formatCitation(c)}
+              {isProvisional(c) ? ' (provisional — primary source not on file)' : ''}
+            </div>
           </div>
         ))}
       </div>

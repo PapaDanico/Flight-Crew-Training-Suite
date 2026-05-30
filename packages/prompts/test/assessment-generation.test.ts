@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { E190_PROFILE, F70_100_PROFILE } from '@dnca/domain';
+import { B737_PROFILE, F70_100_PROFILE } from '@dnca/domain';
 import {
   ASSESSMENT_TARGET,
   buildAssessmentPrompt,
@@ -81,19 +81,19 @@ describe('buildAssessmentPrompt — aircraft type profile selection', () => {
     assert.match(out.system[0]!.text, /5° bank/);
   });
 
-  it('accepts the E190 preview profile and produces a generic calibration', () => {
+  it('accepts the B737 preview profile and produces a generic calibration', () => {
     const out = buildAssessmentPrompt({
       topic: 'Engine fire',
       target: 'crm',
-      aircraftType: E190_PROFILE,
+      aircraftType: B737_PROFILE,
     });
-    assert.equal(out.aircraftTypeProfileId, E190_PROFILE.id);
+    assert.equal(out.aircraftTypeProfileId, B737_PROFILE.id);
     assert.equal(out.aircraftTypeProductionReady, false);
     // The preview block REFUSES to claim F70-specific facts.
     assert.doesNotMatch(out.system[0]!.text, /Rolls-Royce Tay/);
     assert.doesNotMatch(out.system[0]!.text, /5° bank into the live engine/);
     // It DOES name the public engine designation.
-    assert.match(out.system[0]!.text, /CF34-10E/);
+    assert.match(out.system[0]!.text, /CFM56-7B/);
     // It explicitly signals preview status.
     assert.match(out.system[0]!.text, /preview/);
   });
@@ -104,12 +104,12 @@ describe('buildAssessmentPrompt — aircraft type profile selection', () => {
       target: 'crm',
       aircraftType: F70_100_PROFILE,
     });
-    const e190 = buildAssessmentPrompt({
+    const b737 = buildAssessmentPrompt({
       topic: 'Engine fire',
       target: 'crm',
-      aircraftType: E190_PROFILE,
+      aircraftType: B737_PROFILE,
     });
     assert.match(f70.system[1]!.text, /F70\/100/);
-    assert.match(e190.system[1]!.text, /E190/);
+    assert.match(b737.system[1]!.text, /B737/);
   });
 });

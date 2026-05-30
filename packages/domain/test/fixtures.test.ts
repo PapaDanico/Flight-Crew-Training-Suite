@@ -27,13 +27,29 @@ describe('demo fixtures', () => {
     assert.equal(DEMO_OPERATORS[1]!.shortCode, 'IFLY-DEMO');
   });
 
-  it('seeds four pilots split across operators', () => {
-    assert.equal(DEMO_PILOTS.length, 4);
+  it('seeds a realistic establishment: scaled I-Fly F70/100 demo + B737 preview (2) at JAK', () => {
+    // 4 I-Fly anchors + 18 synthetic I-Fly + 2 JAK B737 preview = 24.
+    assert.equal(DEMO_PILOTS.length, 24);
     const byOperator = new Map<string, number>();
     for (const p of DEMO_PILOTS) {
       byOperator.set(p.operatorId, (byOperator.get(p.operatorId) ?? 0) + 1);
     }
-    assert.deepEqual(Array.from(byOperator.values()).sort(), [2, 2]);
+    // JAK stays at 2 (B737 preview); I-Fly carries the scaled production cohort.
+    assert.deepEqual(
+      Array.from(byOperator.values()).sort((a, b) => a - b),
+      [2, 22],
+    );
+    for (const name of ['Alpha One', 'Bravo Two', 'Echo Five', 'Foxtrot Six']) {
+      assert.ok(
+        DEMO_PILOTS.some((p) => p.fullName.includes(name)),
+        `anchor ${name} missing`,
+      );
+    }
+  });
+
+  it('assigns a unique id and licence number to every pilot', () => {
+    assert.equal(new Set(DEMO_PILOTS.map((p) => p.id)).size, DEMO_PILOTS.length);
+    assert.equal(new Set(DEMO_PILOTS.map((p) => p.licenceNumber)).size, DEMO_PILOTS.length);
   });
 
   it('every pilot has a fleet that belongs to its operator', () => {
@@ -45,9 +61,9 @@ describe('demo fixtures', () => {
     }
   });
 
-  it('uses the Capt. Alpha One / F/O Bravo Two demo naming pattern', () => {
+  it('uses the phonetic-alphabet demo naming pattern (fabricated, no real PII)', () => {
     for (const p of DEMO_PILOTS) {
-      assert.match(p.fullName, /(Alpha One|Bravo Two|Charlie Three|Delta Four)/);
+      assert.match(p.fullName, /^(Capt\.|F\/O) [A-Z][a-z]+ [A-Z][a-z]+(-[A-Z][a-z]+)?$/);
       assert.match(p.licenceNumber, /^KCAA\/DEMO\//);
     }
   });

@@ -44,4 +44,4 @@ export const userRoleEnum = pgEnum('user_role', ROLE);
 export const auditActionEnum = pgEnum('audit_action', AUDIT_ACTION);
 
 export const operatorStatusEnum = pgEnum('operator_status', ['active', 'inactive', 'archived']);
-export const fleetVariantEnum = pgEnum('fleet_variant', ['F70', 'F70-HGW', 'F100']);
+export const fleetVariantEnum = pgEnum('fleet_variant', ['F70', 'F70-HGW', 'F100', 'B737']);

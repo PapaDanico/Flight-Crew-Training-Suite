@@ -1,0 +1,257 @@
+import {
+  DEMO_OM_MAPPINGS,
+  DEMO_OPERATORS,
+  DEMO_PILOTS,
+  buildDemoCurrencyRecords,
+  type IsoDate,
+  type OperatorId,
+} from '@dnca/domain';
+import {
+  buildComplianceEvidencePack,
+  type EvidencePackArtifact,
+  type EvidenceProvenanceRow,
+} from '@dnca/exports';
+import { KCARS_2025_ALL_INSTRUMENTS } from '@dnca/ontology';
+
+export const dynamic = 'force-dynamic';
+
+interface PageProps {
+  searchParams: Promise<{ operatorId?: string }>;
+}
+
+export default async function ComplianceEvidencePackPage({ searchParams }: PageProps) {
+  const { operatorId } = await searchParams;
+  const operator =
+    (operatorId
+      ? DEMO_OPERATORS.find((o) => o.id === (operatorId as OperatorId))
+      : DEMO_OPERATORS[0]) ?? DEMO_OPERATORS[0]!;
+  const asOfDate = new Date();
+  const asOf = asOfDate.toISOString().slice(0, 10) as IsoDate;
+
+  const pack = buildComplianceEvidencePack({
+    operator,
+    pilots: DEMO_PILOTS,
+    currencyRecords: buildDemoCurrencyRecords(asOfDate),
+    omMappings: DEMO_OM_MAPPINGS,
+    instruments: KCARS_2025_ALL_INSTRUMENTS,
+    asOf,
+    generatedAt: asOfDate,
+  });
+
+  const t = pack.currencyPosture.totals;
+
+  return (
+    <>
+      <PrintStyle />
+      <div className="print-root font-sans text-slate-800">
+        <Toolbar operatorTradingName={operator.tradingName} asOf={asOf} />
+        <article className="pack mx-auto max-w-4xl bg-white p-10 print:m-0 print:max-w-none print:p-0">
+          <header className="flex items-end justify-between border-b-2 border-amber-500 pb-3">
+            <div>
+              <h1 className="text-lg font-bold text-navy-900">{pack.operator.legalName}</h1>
+              <div className="text-[10px] text-slate-600">
+                AOC {pack.operator.aocNumber} · KCARs 2025-aligned
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm font-bold text-navy-900">COMPLIANCE EVIDENCE PACK</div>
+              <div className="text-[10px] text-slate-600">As of {pack.asOf}</div>
+            </div>
+          </header>
+
+          <section className="my-4 grid grid-cols-3 gap-3 text-center">
+            <Stat
+              label="Crew currency"
+              value={`${t.CURRENT} current`}
+              sub={`${t.CAUTION} caution · ${t.ACTION} action · ${t.EXPIRED} expired`}
+            />
+            <Stat
+              label="OM coverage (Third Schedule)"
+              value={`${pack.omCoverage.mapped}/${pack.omCoverage.totalClauses}`}
+              sub={`${pack.omCoverage.unmapped} unmapped`}
+            />
+            <Stat
+              label="Regulatory provenance"
+              value={`${pack.provenance.verifiedCount}/${pack.provenance.totalCount} verified`}
+              sub="Kenya Law primary source"
+            />
+          </section>
+
+          <Section title="Included artefacts">
+            <ul className="space-y-2 text-[11px]">
+              {pack.artifacts.map((a) => (
+                <ArtifactRow key={a.kind} a={a} />
+              ))}
+            </ul>
+          </Section>
+
+          <Section title={`Pilot training files (${pack.pilotFiles.length})`}>
+            <div className="flex flex-wrap gap-2 text-[10px]">
+              {pack.pilotFiles.map((f) => (
+                <a
+                  key={f.pilotId}
+                  href={f.href}
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded border border-navy-200 bg-white px-2 py-1 text-navy-800 underline decoration-dotted hover:bg-navy-50 print:no-underline"
+                >
+                  {f.name}
+                </a>
+              ))}
+            </div>
+          </Section>
+
+          <Section title="Regulatory source provenance">
+            <table className="w-full border-collapse text-[10px]">
+              <thead>
+                <tr className="border-b border-slate-400 bg-slate-100 text-left text-[8px] uppercase tracking-wide text-slate-600">
+                  <th className="w-[16%] py-1 pl-1">Notice</th>
+                  <th className="w-[12%] py-1">Effective</th>
+                  <th className="w-[12%] py-1">Status</th>
+                  <th className="py-1 pr-1">Subject</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pack.provenance.rows.map((r) => (
+                  <ProvenanceRow key={r.shortLabel} r={r} />
+                ))}
+              </tbody>
+            </table>
+          </Section>
+
+          <Section title="Attestations">
+            <ul className="space-y-2 text-[10px] text-slate-700">
+              {pack.statements.map((s) => (
+                <li key={s.heading}>
+                  <strong className="text-navy-900">{s.heading}.</strong> {s.text}
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          <footer className="mt-8 border-t border-slate-200 pt-3 text-[9px] text-slate-500">
+            Generated by DNCA Flight Crew Training Suite
+            {pack.generatedByUserName ? ` · ${pack.generatedByUserName}` : ''} ·{' '}
+            {pack.generatedAt.toISOString()}. Headline numbers are composed from the same builders
+            as the standalone exports and cannot drift from the live system.
+          </footer>
+        </article>
+      </div>
+    </>
+  );
+}
+
+function ArtifactRow({ a }: { a: EvidencePackArtifact }) {
+  return (
+    <li className="flex items-baseline justify-between gap-3 border-b border-slate-100 pb-2">
+      <div>
+        <a
+          href={a.href}
+          target="_blank"
+          rel="noopener"
+          className="font-semibold text-navy-800 underline decoration-dotted hover:text-navy-900 print:no-underline"
+        >
+          {a.title}
+        </a>
+        <div className="text-slate-500">{a.description}</div>
+      </div>
+      <code className="shrink-0 text-[9px] text-slate-400">{a.href}</code>
+    </li>
+  );
+}
+
+function ProvenanceRow({ r }: { r: EvidenceProvenanceRow }) {
+  return (
+    <tr className="border-b border-slate-200">
+      <td className="py-1 pl-1 font-medium text-navy-900">
+        {r.authoritativeUrl ? (
+          <a
+            href={r.authoritativeUrl}
+            target="_blank"
+            rel="noopener"
+            className="underline decoration-dotted print:no-underline"
+          >
+            {r.shortLabel}
+          </a>
+        ) : (
+          r.shortLabel
+        )}
+      </td>
+      <td className="py-1 text-slate-600">{r.effectiveDate ?? '—'}</td>
+      <td className="py-1">
+        <span
+          className={`inline-block rounded px-1.5 text-[8px] font-bold uppercase ${
+            r.verified ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+          }`}
+        >
+          {r.verified ? 'verified' : 'provisional'}
+        </span>
+      </td>
+      <td className="py-1 pr-1 text-slate-600">
+        {r.longLabel.replace(/^Legal Notice \d+ of 2026 — /, '')}
+      </td>
+    </tr>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="pack-section mt-6">
+      <h2 className="mb-2 bg-navy-900 px-2 py-1 text-[11px] font-bold text-white">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2">
+      <div className="text-[8px] uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-sm font-bold text-navy-900">{value}</div>
+      <div className="text-[9px] text-slate-500">{sub}</div>
+    </div>
+  );
+}
+
+function Toolbar({ operatorTradingName, asOf }: { operatorTradingName: string; asOf: IsoDate }) {
+  return (
+    <div className="no-print sticky top-0 z-10 border-b border-slate-200 bg-amber-50 px-4 py-2 text-xs">
+      <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
+        <div className="text-amber-900">
+          <strong>{operatorTradingName}</strong> — {asOf}. Use{' '}
+          <kbd className="rounded bg-amber-200 px-1">⌘P</kbd>/
+          <kbd className="rounded bg-amber-200 px-1">Ctrl+P</kbd> to save as PDF. Links open each
+          constituent export.
+        </div>
+        <div className="flex gap-2">
+          {DEMO_OPERATORS.map((op) => (
+            <a
+              key={op.id}
+              href={`?operatorId=${op.id}`}
+              className="rounded border border-amber-300 bg-white px-2 py-1 text-amber-900 hover:bg-amber-100"
+            >
+              {op.tradingName}
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PrintStyle() {
+  return (
+    <style
+      dangerouslySetInnerHTML={{
+        __html: `
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; }
+  .pack-section { break-inside: avoid; }
+  @page { size: A4 portrait; margin: 12mm 14mm; }
+}
+        `,
+      }}
+    />
+  );
+}

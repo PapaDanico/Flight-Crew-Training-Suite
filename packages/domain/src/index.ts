@@ -6,6 +6,8 @@ export * from './currency.js';
 export * from './currency-catalog.js';
 export * from './competency.js';
 export * from './training.js';
+export * from './scheduling.js';
+export * from './notifications.js';
 export * from './document.js';
 export * from './governance.js';
 export * from './ai.js';
